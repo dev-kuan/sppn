@@ -5,11 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class CrymeType extends Model
+class CrimeType extends Model
 {
     use HasFactory;
 
-    protected $table = 'cryme_type';
+    protected $table = 'crime_types';
 
     public $timestamps = false;
 
@@ -20,6 +20,6 @@ class CrymeType extends Model
     // Relationships
     public function inmates()
     {
-        return $this->hasMany(Inmate::class, 'cryme_type_id');
+        return $this->hasMany(Inmate::class, 'crime_type_id');
     }
 }

@@ -9,7 +9,7 @@ class CommitmentRecommendation extends Model
 {
     use HasFactory;
 
-    protected $table = 'commitment_recomendations';
+    protected $table = 'commitment_recommendations';
 
     protected $fillable = [
         'assessment_id',

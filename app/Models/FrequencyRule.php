@@ -32,4 +32,5 @@ class FrequencyRule extends Model
     {
         return $query->where('aktif', true);
     }
+
 }

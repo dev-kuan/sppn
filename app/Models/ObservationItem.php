@@ -95,22 +95,40 @@ class ObservationItem extends Model
         return $query->with(['variabel', 'aspect', 'frequencyRule']);
     }
 
-    // Methods
-    public function calculateFrequency($daysInMonth)
+    protected function isMaxDaysFormula(array $formula): bool
     {
-        if (!$this->use_dynamic_frequency || !$this->frequencyRule) {
-            return $this->frekuensi_bulan;
-        }
+        return isset($formula[0]['max_days']);
+    }
 
-        $formula = $this->frequencyRule->formula;
+    protected function isFixedFormula(array $formula): bool
+    {
+        return isset($formula[0]['frequency']) && !isset($formula[0]['max_days']);
+    }
 
-        // Evaluate formula based on days in month
+    // Methods
+public function calculateFrequency($daysInMonth)
+{
+    if (!$this->use_dynamic_frequency || !$this->frequencyRule) {
+        return $this->frekuensi_bulan;
+    }
+
+    $formula = $this->frequencyRule->formula;
+
+    // 🔹 TIPE 1: berdasarkan max_days
+    if ($this->isMaxDaysFormula($formula)) {
         foreach ($formula as $rule) {
             if ($daysInMonth <= $rule['max_days']) {
                 return $rule['frequency'];
             }
         }
-
-        return $this->frekuensi_bulan;
     }
+
+    // 🔹 TIPE 2: fixed / event-based
+    if ($this->isFixedFormula($formula)) {
+        return $formula[0]['frequency'] ?? $this->frekuensi_bulan;
+    }
+
+    return $this->frekuensi_bulan;
+}
+
 }

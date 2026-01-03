@@ -49,7 +49,7 @@ class ObservationItemSeeder extends Seeder
         ObservationItem::create([
             'kode' => 'PK-KB-01',
             'variabel_id' => $variabelId,
-            'aspek_id' => $kesadaranBeragama->id,
+            'aspect_id' => $kesadaranBeragama->id,
             'nama_item' => 'Membaca dan/atau belajar Kitab Suci',
             'bobot' => 1.04,
             'frequency_rule_id' => $kesadaranBeragamaRule->id,
@@ -62,7 +62,7 @@ class ObservationItemSeeder extends Seeder
         ObservationItem::create([
             'kode' => 'PK-KB-02',
             'variabel_id' => $variabelId,
-            'aspek_id' => $kesadaranBeragama->id,
+            'aspect_id' => $kesadaranBeragama->id,
             'nama_item' => 'Ibadah tepat waktu / rutin',
             'bobot' => 1.08,
             'frekuensi_bulan' => 31,
@@ -73,7 +73,7 @@ class ObservationItemSeeder extends Seeder
         ObservationItem::create([
             'kode' => 'PK-KB-03',
             'variabel_id' => $variabelId,
-            'aspek_id' => $kesadaranBeragama->id,
+            'aspect_id' => $kesadaranBeragama->id,
             'nama_item' => 'Melaksanakan ibadah di luar yang wajib',
             'bobot' => 0.87,
             'frequency_rule_id' => $kegiatanBerkalaRule->id,
@@ -86,7 +86,7 @@ class ObservationItemSeeder extends Seeder
         ObservationItem::create([
             'kode' => 'PK-KB-04',
             'variabel_id' => $variabelId,
-            'aspek_id' => $kesadaranBeragama->id,
+            'aspect_id' => $kesadaranBeragama->id,
             'nama_item' => 'Mengikuti kegiatan ceramah/khotbah',
             'bobot' => 0.97,
             'frequency_rule_id' => $kegiatanBerkalaRule->id,
@@ -99,7 +99,7 @@ class ObservationItemSeeder extends Seeder
         ObservationItem::create([
             'kode' => 'PK-KB-05',
             'variabel_id' => $variabelId,
-            'aspek_id' => $kesadaranBeragama->id,
+            'aspect_id' => $kesadaranBeragama->id,
             'nama_item' => 'Mengikuti ibadah secara berkelompok',
             'bobot' => 1.03,
             'frekuensi_bulan' => 1,
@@ -111,7 +111,7 @@ class ObservationItemSeeder extends Seeder
         ObservationItem::create([
             'kode' => 'PK-KH-01',
             'variabel_id' => $variabelId,
-            'aspek_id' => $kesadaranHukum->id,
+            'aspect_id' => $kesadaranHukum->id,
             'nama_item' => 'Mengikuti penyuluhan wawasan nusantara',
             'bobot' => 1.08,
             'frekuensi_bulan' => 1,
@@ -122,7 +122,7 @@ class ObservationItemSeeder extends Seeder
         ObservationItem::create([
             'kode' => 'PK-KH-02',
             'variabel_id' => $variabelId,
-            'aspek_id' => $kesadaranHukum->id,
+            'aspect_id' => $kesadaranHukum->id,
             'nama_item' => 'Mengikuti penyuluhan hukum dampak dan bahaya tindak pidana',
             'bobot' => 1.07,
             'frekuensi_bulan' => 1,
@@ -133,7 +133,7 @@ class ObservationItemSeeder extends Seeder
         ObservationItem::create([
             'kode' => 'PK-KH-03',
             'variabel_id' => $variabelId,
-            'aspek_id' => $kesadaranHukum->id,
+            'aspect_id' => $kesadaranHukum->id,
             'nama_item' => 'Memperoleh nilai evaluasi materi penyuluhan',
             'bobot' => 0.92,
             'frekuensi_bulan' => 1,
@@ -144,7 +144,7 @@ class ObservationItemSeeder extends Seeder
         ObservationItem::create([
             'kode' => 'PK-KH-04',
             'variabel_id' => $variabelId,
-            'aspek_id' => $kesadaranHukum->id,
+            'aspect_id' => $kesadaranHukum->id,
             'nama_item' => 'Mengikuti upacara',
             'bobot' => 1.00,
             'frekuensi_bulan' => 1,
@@ -155,7 +155,7 @@ class ObservationItemSeeder extends Seeder
         ObservationItem::create([
             'kode' => 'PK-KH-05',
             'variabel_id' => $variabelId,
-            'aspek_id' => $kesadaranHukum->id,
+            'aspect_id' => $kesadaranHukum->id,
             'nama_item' => 'Hormati bendera saat upacara',
             'bobot' => 1.04,
             'frekuensi_bulan' => 1,
@@ -166,7 +166,7 @@ class ObservationItemSeeder extends Seeder
         ObservationItem::create([
             'kode' => 'PK-KH-06',
             'variabel_id' => $variabelId,
-            'aspek_id' => $kesadaranHukum->id,
+            'aspect_id' => $kesadaranHukum->id,
             'nama_item' => 'Mengisi lembar self-assessment',
             'bobot' => 0.00,
             'is_conditional_weight' => true,
@@ -180,7 +180,7 @@ class ObservationItemSeeder extends Seeder
         ObservationItem::create([
             'kode' => 'PK-KH-07',
             'variabel_id' => $variabelId,
-            'aspek_id' => $kesadaranHukum->id,
+            'aspect_id' => $kesadaranHukum->id,
             'nama_item' => 'Mengikuti pramuka',
             'bobot' => 0.00,
             'is_conditional_weight' => true,
@@ -195,7 +195,7 @@ class ObservationItemSeeder extends Seeder
         ObservationItem::create([
             'kode' => 'PK-KI-01',
             'variabel_id' => $variabelId,
-            'aspek_id' => $kemampuanIntelektual->id,
+            'aspect_id' => $kemampuanIntelektual->id,
             'nama_item' => 'Membaca buku di perpustakaan',
             'bobot' => 1.01,
             'frekuensi_bulan' => 1,
@@ -206,7 +206,7 @@ class ObservationItemSeeder extends Seeder
         ObservationItem::create([
             'kode' => 'PK-KI-02',
             'variabel_id' => $variabelId,
-            'aspek_id' => $kemampuanIntelektual->id,
+            'aspect_id' => $kemampuanIntelektual->id,
             'nama_item' => 'Mengikuti pendidikan Paket A/B/C',
             'bobot' => 0.00,
             'frekuensi_bulan' => 1,
@@ -220,7 +220,7 @@ class ObservationItemSeeder extends Seeder
         ObservationItem::create([
             'kode' => 'PK-KI-03',
             'variabel_id' => $variabelId,
-            'aspek_id' => $kemampuanIntelektual->id,
+            'aspect_id' => $kemampuanIntelektual->id,
             'nama_item' => 'Mengikuti materi CMT & LST',
             'bobot' => 1.01,
             'frekuensi_bulan' => 1,
@@ -232,7 +232,7 @@ class ObservationItemSeeder extends Seeder
         ObservationItem::create([
             'kode' => 'PK-KJ-01',
             'variabel_id' => $variabelId,
-            'aspek_id' => $kesehatanJasmani->id,
+            'aspect_id' => $kesehatanJasmani->id,
             'nama_item' => 'Mengikuti kegiatan rekreasi',
             'bobot' => 0.95,
             'frekuensi_bulan' => 31,
@@ -243,7 +243,7 @@ class ObservationItemSeeder extends Seeder
         ObservationItem::create([
             'kode' => 'PK-KJ-02',
             'variabel_id' => $variabelId,
-            'aspek_id' => $kesehatanJasmani->id,
+            'aspect_id' => $kesehatanJasmani->id,
             'nama_item' => 'Mengikuti olahraga luar ruangan (komunal)',
             'bobot' => 1.06,
             'frequency_rule_id' => $kegiatanBerkalaRule->id,
@@ -256,7 +256,7 @@ class ObservationItemSeeder extends Seeder
         ObservationItem::create([
             'kode' => 'PK-KJ-03',
             'variabel_id' => $variabelId,
-            'aspek_id' => $kesehatanJasmani->id,
+            'aspect_id' => $kesehatanJasmani->id,
             'nama_item' => 'Mengikuti kegiatan kesenian',
             'bobot' => 0.99,
             'frequency_rule_id' => $kegiatanBerkalaRule->id,
@@ -270,7 +270,7 @@ class ObservationItemSeeder extends Seeder
         ObservationItem::create([
             'kode' => 'PK-KR-01',
             'variabel_id' => $variabelId,
-            'aspek_id' => $konselingRehab->id,
+            'aspect_id' => $konselingRehab->id,
             'nama_item' => 'Mengikuti konseling psikologi',
             'bobot' => 0.00,
             'frekuensi_bulan' => 0,
@@ -284,7 +284,7 @@ class ObservationItemSeeder extends Seeder
         ObservationItem::create([
             'kode' => 'PK-KR-02',
             'variabel_id' => $variabelId,
-            'aspek_id' => $konselingRehab->id,
+            'aspect_id' => $konselingRehab->id,
             'nama_item' => 'Mengikuti rehabilitasi sosial',
             'bobot' => 0.00,
             'frekuensi_bulan' => 0,
@@ -298,7 +298,7 @@ class ObservationItemSeeder extends Seeder
         ObservationItem::create([
             'kode' => 'PK-KR-03',
             'variabel_id' => $variabelId,
-            'aspek_id' => $konselingRehab->id,
+            'aspect_id' => $konselingRehab->id,
             'nama_item' => 'Mengikuti rehabilitasi medis',
             'bobot' => 0.00,
             'frekuensi_bulan' => 0,
@@ -335,7 +335,7 @@ class ObservationItemSeeder extends Seeder
             ObservationItem::create([
                 'kode' => $item['kode'],
                 'variabel_id' => $variabelId,
-                'aspek_id' => $pelatihanKeterampilan->id,
+                'aspect_id' => $pelatihanKeterampilan->id,
                 'nama_item' => $item['nama'],
                 'bobot' => $item['bobot'],
                 'frequency_rule_id' => $pelatihanRule->id,
@@ -349,7 +349,7 @@ class ObservationItemSeeder extends Seeder
         ObservationItem::create([
             'kode' => 'PM-PK-05',
             'variabel_id' => $variabelId,
-            'aspek_id' => $pelatihanKeterampilan->id,
+            'aspect_id' => $pelatihanKeterampilan->id,
             'nama_item' => 'Mendapatkan skor post test pengetahuan minimal 60',
             'bobot' => 0.93,
             'frekuensi_bulan' => 1,
@@ -359,7 +359,7 @@ class ObservationItemSeeder extends Seeder
         ObservationItem::create([
             'kode' => 'PM-PK-06',
             'variabel_id' => $variabelId,
-            'aspek_id' => $pelatihanKeterampilan->id,
+            'aspect_id' => $pelatihanKeterampilan->id,
             'nama_item' => 'Mendapatkan skor tes keterampilan minimal 60',
             'bobot' => 0.92,
             'frekuensi_bulan' => 1,
@@ -381,7 +381,7 @@ class ObservationItemSeeder extends Seeder
             ObservationItem::create([
                 'kode' => $item['kode'],
                 'variabel_id' => $variabelId,
-                'aspek_id' => $produksiBarang->id,
+                'aspect_id' => $produksiBarang->id,
                 'nama_item' => $item['nama'],
                 'bobot' => $item['bobot'],
                 // 'frequency_rule_id' => $pelatihanRule->id,
@@ -430,7 +430,7 @@ class ObservationItemSeeder extends Seeder
             ObservationItem::create([
                 'kode' => $item['kode'],
                 'variabel_id' => $variabelId,
-                'aspek_id' => $keberfungsian->id,
+                'aspect_id' => $keberfungsian->id,
                 'nama_item' => $item['nama'],
                 'bobot' => $item['bobot'],
                 'frekuensi_bulan' => 31,
@@ -442,10 +442,10 @@ class ObservationItemSeeder extends Seeder
         ObservationItem::create([
             'kode' => 'SN-KR-05',
             'variabel_id' => $variabelId,
-            'aspek_id' => $keberfungsian->id,
+            'aspect_id' => $keberfungsian->id,
             'nama_item' => 'Ikut kerja bakti',
             'bobot' => 1.06,
-            'frequency_rule_id' => $kegiatanDiselenggarakanRule->id,
+            'frequency_rule_id' => $kegiatanBerkalaRule->id,
             'use_dynamic_frequency' => true,
             'frekuensi_bulan' => $kegiatanBerkalaRule->id,
             'sort_order' => $sortOrder++,
@@ -454,7 +454,7 @@ class ObservationItemSeeder extends Seeder
         ObservationItem::create([
             'kode' => 'SN-KR-12',
             'variabel_id' => $variabelId,
-            'aspek_id' => $keberfungsian->id,
+            'aspect_id' => $keberfungsian->id,
             'nama_item' => 'Menerima kunjungan keluarga',
             'bobot' => 1.06,
             'frekuensi_bulan' => 1,
@@ -464,7 +464,7 @@ class ObservationItemSeeder extends Seeder
         ObservationItem::create([
             'kode' => 'SN-KR-13',
             'variabel_id' => $variabelId,
-            'aspek_id' => $keberfungsian->id,
+            'aspect_id' => $keberfungsian->id,
             'nama_item' => 'Menerima kunjungan dinas',
             'bobot' => 1.01,
             'frekuensi_bulan' => 1,
@@ -474,13 +474,13 @@ class ObservationItemSeeder extends Seeder
         ObservationItem::create([
             'kode' => 'SN-KR-14',
             'variabel_id' => $variabelId,
-            'aspek_id' => $keberfungsian->id,
+            'aspect_id' => $keberfungsian->id,
             'nama_item' => 'Mau merapikan rambut, janggut, dan kuku',
             'bobot' => 1.00,
             'is_conditional_weight' => true,
             'frequency_rule_id' => $kegiatanDiselenggarakanRule->id,
             'use_dynamic_frequency' => true,
-            'frekuensi_bulan' => $kegiatanDiselenggarakanRule,
+            'frekuensi_bulan' => 1,
             'sort_order' => $sortOrder++,
             'aktif' => true,
         ]);
@@ -500,7 +500,7 @@ class ObservationItemSeeder extends Seeder
             ObservationItem::create([
                 'kode' => $item['kode'],
                 'variabel_id' => $variabelId,
-                'aspek_id' => $agresi->id,
+                'aspect_id' => $agresi->id,
                 'nama_item' => $item['nama'],
                 'bobot' => $item['bobot'],
                 'frekuensi_bulan' => 31,
@@ -521,7 +521,7 @@ class ObservationItemSeeder extends Seeder
             ObservationItem::create([
                 'kode' => $item['kode'],
                 'variabel_id' => $variabelId,
-                'aspek_id' => $pelanggaran->id,
+                'aspect_id' => $pelanggaran->id,
                 'nama_item' => $item['nama'],
                 'bobot' => 0.00,
                 'is_conditional_weight' => true,
@@ -535,14 +535,14 @@ class ObservationItemSeeder extends Seeder
         $mempengaruhiItems = [
             ['kode' => 'SN-KM-01', 'nama' => 'Membujuk petugas Pemasyarakatan melakukan pelanggaran secara langsung', 'bobot' => 0.99],
             ['kode' => 'SN-KM-02', 'nama' => 'Menggunakan jaringan untuk membujuk petugas Pemasyarakatan melakukan pelanggaran', 'bobot' => 1.01],
-            ['kode' => 'SN-KM-02', 'nama' => 'Membujuk atau mengajak narapidana lain melakukan pelanggaran', 'bobot' => 1.00],
+            ['kode' => 'SN-KM-03', 'nama' => 'Membujuk atau mengajak narapidana lain melakukan pelanggaran', 'bobot' => 1.00],
         ];
 
         foreach ($mempengaruhiItems as $item) {
             ObservationItem::create([
                 'kode' => $item['kode'],
                 'variabel_id' => $variabelId,
-                'aspek_id' => $mempengaruhi->id,
+                'aspect_id' => $mempengaruhi->id,
                 'nama_item' => $item['nama'],
                 'bobot' => $item['bobot'],
                 'frekuensi_bulan' => 31,
@@ -564,7 +564,7 @@ class ObservationItemSeeder extends Seeder
             ObservationItem::create([
                 'kode' => $item['kode'],
                 'variabel_id' => $variabelId,
-                'aspek_id' => $ekspresi->id,
+                'aspect_id' => $ekspresi->id,
                 'nama_item' => $item['nama'],
                 'bobot' => $item['bobot'],
                 'frekuensi_bulan' => 31,
@@ -606,7 +606,7 @@ class ObservationItemSeeder extends Seeder
             ObservationItem::create([
                 'kode' => $item['kode'],
                 'variabel_id' => $variabelId,
-                'aspek_id' => $depresi->id,
+                'aspect_id' => $depresi->id,
                 'nama_item' => $item['nama'],
                 'bobot' => $item['bobot'],
                 'frekuensi_bulan' => 31,
@@ -626,7 +626,7 @@ class ObservationItemSeeder extends Seeder
             ObservationItem::create([
                 'kode' => $item['kode'],
                 'variabel_id' => $variabelId,
-                'aspek_id' => $kecemasan->id,
+                'aspect_id' => $kecemasan->id,
                 'nama_item' => $item['nama'],
                 'bobot' => $item['bobot'],
                 'frekuensi_bulan' => 31,
@@ -644,7 +644,7 @@ class ObservationItemSeeder extends Seeder
             ObservationItem::create([
                 'kode' => $item['kode'],
                 'variabel_id' => $variabelId,
-                'aspek_id' => $psikosomatis->id,
+                'aspect_id' => $psikosomatis->id,
                 'nama_item' => $item['nama'],
                 'bobot' => $item['bobot'],
                 'frekuensi_bulan' => 31,
@@ -661,7 +661,7 @@ class ObservationItemSeeder extends Seeder
             ObservationItem::create([
                 'kode' => $item['kode'],
                 'variabel_id' => $variabelId,
-                'aspek_id' => $malingering->id,
+                'aspect_id' => $malingering->id,
                 'nama_item' => $item['nama'],
                 'bobot' => $item['bobot'],
                 'frekuensi_bulan' => 31,
@@ -682,7 +682,7 @@ class ObservationItemSeeder extends Seeder
             ObservationItem::create([
                 'kode' => $item['kode'],
                 'variabel_id' => $variabelId,
-                'aspek_id' => $bunuhDiri->id,
+                'aspect_id' => $bunuhDiri->id,
                 'nama_item' => $item['nama'],
                 'bobot' => $item['bobot'],
                 'frekuensi_bulan' => 31,

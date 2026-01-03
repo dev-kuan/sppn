@@ -2,18 +2,18 @@
 
 namespace Database\Seeders;
 
-use App\Models\CrymeType;
+use App\Models\CrimeType;
 use Illuminate\Database\Seeder;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 
-class CrymeTypeSeeder extends Seeder
+class CrimeTypeSeeder extends Seeder
 {
     /**
      * Run the database seeds.
      */
     public function run(): void
     {
-        $crymeTypes = [
+        $crimeTypes = [
             'Farmasi dan Kesehatan',
             'Fidusia (Pengalihan hak kepemilikan)',
             'Illegal Logging/Pembakaran liar',
@@ -83,8 +83,8 @@ class CrymeTypeSeeder extends Seeder
             'Pidsus Cukai',
         ];
 
-        foreach ($crymeTypes as $type) {
-            CrymeType::create(['nama' => $type]);
+        foreach ($crimeTypes as $type) {
+            CrimeType::create(['nama' => $type]);
         }
 
         $this->command->info('Crime Types seeded successfully!');

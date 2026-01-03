@@ -7,6 +7,7 @@ use App\Models\Inmate;
 use App\Models\Assessment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Spatie\Activitylog\Models\Activity;
 
 class DashboardController extends Controller
 {
@@ -86,16 +87,15 @@ class DashboardController extends Controller
 
         // Crime type distribution
         $data['crimeDistribution'] = Inmate::aktif()
-            ->select('cryme_type_id', DB::raw('COUNT(*) as total'))
-            ->with('crymeType')
-            ->groupBy('cryme_type_id')
+            ->select('crime_type_id', DB::raw('COUNT(*) as total'))
+            ->with('crimeType')
+            ->groupBy('crime_type_id')
             ->orderBy('total', 'desc')
             ->limit(10)
             ->get();
 
         // Recent activities
-        $data['recentActivities'] = activity()
-            ->orderBy('created_at', 'desc')
+        $data['recentActivities'] = Activity::orderBy('created_at', 'desc')
             ->limit(10)
             ->get();
 
@@ -261,15 +261,15 @@ class DashboardController extends Controller
     private function getCrimeDistributionData()
     {
         $data = Inmate::aktif()
-            ->select('cryme_type_id', DB::raw('COUNT(*) as total'))
-            ->with('crymeType')
-            ->groupBy('cryme_type_id')
+            ->select('crime_type_id', DB::raw('COUNT(*) as total'))
+            ->with('crimeType')
+            ->groupBy('crime_type_id')
             ->orderBy('total', 'desc')
             ->limit(10)
             ->get();
 
         return response()->json([
-            'labels' => $data->map(fn($item) => $item->crymeType->nama),
+            'labels' => $data->map(fn($item) => $item->crimeType->nama),
             'data' => $data->pluck('total'),
         ]);
     }

@@ -25,7 +25,7 @@ return new class extends Migration
                 ->nullable()
                 ->constrained('frequency_rules')
                 ->nullOnDelete();
-            $table->boolean('use_dinamyc_frequency')->default(false);
+            $table->boolean('use_dynamic_frequency')->default(false);
             $table->integer('sort_order')->default(0);
             $table->boolean('aktif')->default(true);
             $table->timestamps();

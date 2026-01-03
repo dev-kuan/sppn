@@ -13,41 +13,45 @@ class DatabaseSeeder extends Seeder
      */
  public function run(): void
     {
-        $this->command->info('🌱 Starting SPPN Database Seeding...');
+        $this->command->info('Starting SPPN Database Seeding...');
         $this->command->newLine();
 
         // 1. Roles & Permissions
-        $this->command->info('📝 Seeding Roles & Permissions...');
+        $this->command->info('Seeding Roles & Permissions...');
         $this->call(RolePermissionSeeder::class);
         $this->command->newLine();
 
         // 2. Users
-        $this->command->info('👤 Seeding Users...');
+        $this->command->info('Seeding Users...');
         $this->call(UserSeeder::class);
         $this->command->newLine();
 
         // 3. Crime Types
-        $this->command->info('⚖️  Seeding Crime Types...');
-        $this->call(CrymeTypeSeeder::class);
+        $this->command->info(' Seeding Crime Types...');
+        $this->call(CrimeTypeSeeder::class);
         $this->command->newLine();
 
-        // 4. Frequency Rules
-        $this->command->info('📊 Seeding Frequency Rules...');
+        // 4. Crime Types
+        $this->command->info(string: 'Seeding Assesment variabel and aspect...');
+        $this->call(AssessmentVariabelAspectSeeder::class);
+        $this->command->newLine();
+
+        // 5. Frequency Rules
+        $this->command->info('Seeding Frequency Rules...');
         $this->call(FrequencyRuleSeeder::class);
         $this->command->newLine();
 
-        // 5. Observation Items
-        $this->command->info('🔍 Seeding Observation Items...');
+        // 6. Observation Items
+        $this->command->info('Seeding Observation Items...');
         $this->call(ObservationItemSeeder::class);
         $this->command->newLine();
 
-        $this->command->info('✅ Database seeding completed successfully!');
+        $this->command->info('Database seeding completed successfully!');
         $this->command->newLine();
 
         // Display Login Info
         $this->displayLoginInfo();
     }
-
     private function displayLoginInfo()
     {
         $this->command->info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
@@ -56,17 +60,17 @@ class DatabaseSeeder extends Seeder
         $this->command->newLine();
 
         $credentials = [
-            ['Role' => 'Admin', 'Username' => 'admin', 'Password' => 'password123'],
-            ['Role' => 'Kepala Lapas', 'Username' => 'kepala_lapas', 'Password' => 'password123'],
-            ['Role' => 'Wali Pemasyarakatan', 'Username' => 'wali', 'Password' => 'password123'],
-            ['Role' => 'Petugas Input 1', 'Username' => 'petugas1', 'Password' => 'password123'],
-            ['Role' => 'Petugas Input 2', 'Username' => 'petugas2', 'Password' => 'password123'],
+            ['Role' => 'Admin', 'Email' => 'admin@sppn.test', 'Password' => 'password123'],
+            ['Role' => 'Kepala Lapas', 'Email' => 'kepala@sppn.test', 'Password' => 'password123'],
+            ['Role' => 'Wali Pemasyarakatan', 'Email' => 'wali@sppn.test', 'Password' => 'password123'],
+            ['Role' => 'Petugas Input 1', 'Email' => 'petugas@sppn.test', 'Password' => 'password123'],
+            ['Role' => 'Petugas Input 2', 'Email' => 'petugas2', 'Password' => 'password123'],
         ];
 
-        $this->command->table(['Role', 'Username', 'Password'], $credentials);
+        $this->command->table(['Role', 'Email', 'Password'], $credentials);
 
         $this->command->newLine();
-        $this->command->warn('⚠️  Please change these passwords in production!');
+        $this->command->warn('Please change these passwords in production!');
         $this->command->info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     }
 }

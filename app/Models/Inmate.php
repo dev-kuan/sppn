@@ -27,7 +27,7 @@ class Inmate extends Model
         'catatan_kesehatan',
         'pelatihan',
         'program_kerja',
-        'cryme_type_id',
+        'crime_type_id',
         'status',
         'tanggal_masuk',
         'tanggal_bebas',
@@ -52,9 +52,9 @@ class Inmate extends Model
     }
 
     // Relationships
-    public function crymeType()
+    public function crimeType()
     {
-        return $this->belongsTo(CrymeType::class, 'cryme_type_id');
+        return $this->belongsTo(CrimeType::class, 'crime_type_id');
     }
 
     public function assessments()

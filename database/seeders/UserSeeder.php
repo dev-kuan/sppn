@@ -39,12 +39,12 @@ public function run(): void
             [
                 'name' => 'Kepala Lapas',
                 'email' => 'kepala@sppn.test',
-                'role' => 'kepala lapas',
+                'role' => 'kepala_lapas',
             ],
             [
                 'name' => 'Petugas Input',
                 'email' => 'petugas@sppn.test',
-                'role' => 'petugas input',
+                'role' => 'petugas_input',
             ],
             [
                 'name' => 'Wali Pemasyarakatan',

@@ -11,7 +11,7 @@ class AssessmentAspect extends Model
 {
     use HasFactory, LogsActivity;
 
-    protected $table = 'assessment_aspect';
+    protected $table = 'assessment_aspects';
 
     public $timestamps = false;
 
@@ -41,12 +41,12 @@ class AssessmentAspect extends Model
 
     public function observationItems()
     {
-        return $this->hasMany(ObservationItem::class, 'aspek_id');
+        return $this->hasMany(ObservationItem::class, 'aspect_id');
     }
 
     public function assessmentScores()
     {
-        return $this->hasMany(AssessmentScore::class, 'aspek_id');
+        return $this->hasMany(AssessmentScore::class, 'aspect_id');
     }
 
     // Scopes

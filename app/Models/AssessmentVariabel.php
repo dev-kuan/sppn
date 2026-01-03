@@ -11,7 +11,7 @@ class AssessmentVariabel extends Model
 {
     use HasFactory, LogsActivity;
 
-    protected $table = 'assessment_variabel';
+    protected $table = 'assessment_variabels';
 
     public $timestamps = false;
 

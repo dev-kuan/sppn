@@ -53,7 +53,7 @@ class FrequencyRuleSeeder extends Seeder
             'nama_aturan' => 'Kegiatan diselenggarakan',
             'deskripsi' => 'Frekuensi untuk kegiatan yang diselenggarakan',
             'formula' => [
-                ['diselenggarakan' => true, 'frequency' => 1],
+                ['diselenggarakan' => 1, 'frequency' => 1],
             ],
             'aktif' => true,
         ]);
