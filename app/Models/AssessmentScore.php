@@ -9,7 +9,7 @@ class AssessmentScore extends Model
 {
     use HasFactory;
 
-    protected $table = 'assessments_scores';
+    protected $table = 'assessment_scores';
 
     protected $fillable = [
         'assessment_id',

@@ -33,7 +33,7 @@
                 <tr>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ $variabel->id }}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ $variabel->nama }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $variabel->aspects_count }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $variabel->aspect_count }}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $variabel->observation_items_count }}</td>
                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                         <button @click="editVariabel({{ $variabel }})"

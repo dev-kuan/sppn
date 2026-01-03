@@ -119,6 +119,7 @@ class InmateController extends Controller
         // $this->authorize('edit-narapidana');
 
         $crimeTypes = CrimeType::all();
+        $inmate->tanggal_masuk = $inmate->tanggal_masuk? $inmate->tanggal_masuk->format('Y-m-d'): null;
 
         return view('inmates.edit', compact('inmate', 'crimeTypes'));
     }

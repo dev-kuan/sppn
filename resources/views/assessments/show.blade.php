@@ -153,7 +153,7 @@
             <h3 class="text-lg font-semibold text-indigo-900">{{ $variabel->nama }}</h3>
         </div>
 
-        @foreach($variabel->aspects as $aspek)
+        @foreach($variabel->aspect as $aspek)
         <div class="border-b border-gray-200 last:border-b-0">
             <div x-data="{ open: false }" class="border-b border-gray-100">
                 <button @click="open = !open"

@@ -50,7 +50,7 @@ class SettingController extends Controller
         // $this->authorize('manage-observation-items');
 
         $validated = $request->validate([
-            'nama' => 'required|string|max:50|unique:assessment_variabel,nama',
+            'nama' => 'required|string|max:50|unique:assessment_variabels,nama',
         ]);
 
         DB::beginTransaction();

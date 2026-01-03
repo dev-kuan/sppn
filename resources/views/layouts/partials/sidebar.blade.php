@@ -1,7 +1,7 @@
 
 <!-- Logo -->
 <div class="flex h-16 shrink-0 items-center">
-    <img class="h-10 w-auto" src="/images/logo.png" alt="SPPN">
+    <img class="h-12 w-auto" src="/logo.webp" alt="SPPN">
     <span class="ml-3 text-xl font-bold text-gray-900">SPPN</span>
 </div>
 

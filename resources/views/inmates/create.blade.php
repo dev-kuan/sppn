@@ -160,7 +160,7 @@
             </div>
 
             <!-- Data Pidana -->
-            <div class="pt-6 border-t border-gray-200">
+            <div x-data="pidanaForm()" class="pt-6 border-t border-gray-200">
                 <h4 class="text-base font-semibold text-gray-900 mb-4">Data Pidana</h4>
                 <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
                     <!-- Jenis Tindak Pidana -->
@@ -184,6 +184,24 @@
                         @enderror
                     </div>
 
+                    <!-- Tanggal Masuk -->
+                    <div>
+                        <label for="tanggal_masuk" class="block text-sm font-medium text-gray-700">
+                            Tanggal Masuk <span class="text-red-500">*</span>
+                        </label>
+                        <input type="date"
+                               name="tanggal_masuk"
+                               id="tanggal_masuk"
+                               value="{{ old('tanggal_masuk') }}"
+                               x-model="tanggalMasuk"
+                               @input="hitung"
+                               required
+                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm @error('tanggal_masuk') border-red-500 @enderror">
+                        @error('tanggal_masuk')
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
                     <!-- Lama Pidana -->
                     <div>
                         <label for="lama_pidana_bulan" class="block text-sm font-medium text-gray-700">
@@ -193,6 +211,8 @@
                                name="lama_pidana_bulan"
                                id="lama_pidana_bulan"
                                value="{{ old('lama_pidana_bulan') }}"
+                               x-model="lamaPidana"
+                               @input="hitung"
                                min="1"
                                required
                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm @error('lama_pidana_bulan') border-red-500 @enderror">
@@ -210,10 +230,27 @@
                                name="sisa_pidana_bulan"
                                id="sisa_pidana_bulan"
                                value="{{ old('sisa_pidana_bulan') }}"
+                               x-model="sisaPidana"
                                min="0"
                                required
                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm @error('sisa_pidana_bulan') border-red-500 @enderror">
                         @error('sisa_pidana_bulan')
+                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+
+                    <!-- Tanggal Bebas -->
+                    <div>
+                        <label for="tanggal_bebas" class="block text-sm font-medium text-gray-700">
+                            Tanggal Bebas (Estimasi)
+                        </label>
+                        <input type="date"
+                               name="tanggal_bebas"
+                               id="tanggal_bebas"
+                               value="{{ old('tanggal_bebas') }}"
+                               x-model="tanggalBebas"
+                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                        @error('tanggal_bebas')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                         @enderror
                     </div>
@@ -234,36 +271,6 @@
                         @enderror
                     </div>
 
-                    <!-- Tanggal Masuk -->
-                    <div>
-                        <label for="tanggal_masuk" class="block text-sm font-medium text-gray-700">
-                            Tanggal Masuk <span class="text-red-500">*</span>
-                        </label>
-                        <input type="date"
-                               name="tanggal_masuk"
-                               id="tanggal_masuk"
-                               value="{{ old('tanggal_masuk') }}"
-                               required
-                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm @error('tanggal_masuk') border-red-500 @enderror">
-                        @error('tanggal_masuk')
-                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
-
-                    <!-- Tanggal Bebas -->
-                    <div>
-                        <label for="tanggal_bebas" class="block text-sm font-medium text-gray-700">
-                            Tanggal Bebas (Estimasi)
-                        </label>
-                        <input type="date"
-                               name="tanggal_bebas"
-                               id="tanggal_bebas"
-                               value="{{ old('tanggal_bebas') }}"
-                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-                        @error('tanggal_bebas')
-                        <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
-                        @enderror
-                    </div>
                 </div>
             </div>
 
@@ -337,3 +344,43 @@
     </div>
 </div>
 @endsection
+@push('scripts')
+    <script>
+function pidanaForm() {
+    return {
+        tanggalMasuk: '',
+        lamaPidana: '',
+        tanggalBebas: '',
+        sisaPidana: '',
+
+        hitung() {
+            if (!this.tanggalMasuk || !this.lamaPidana) {
+                this.tanggalBebas = '';
+                this.sisaPidana = '';
+                return;
+            }
+
+            // Hitung tanggal bebas
+            let masuk = new Date(this.tanggalMasuk);
+            let bebas = new Date(masuk);
+            bebas.setMonth(bebas.getMonth() + parseInt(this.lamaPidana));
+
+            this.tanggalBebas = bebas.toISOString().split('T')[0];
+
+            // Hitung sisa pidana (bulan)
+            let today = new Date();
+            if (today >= bebas) {
+                this.sisaPidana = 0;
+            } else {
+                let diffMonth =
+                    (bebas.getFullYear() - today.getFullYear()) * 12 +
+                    (bebas.getMonth() - today.getMonth());
+
+                this.sisaPidana = diffMonth;
+            }
+        }
+    }
+}
+</script>
+
+@endpush

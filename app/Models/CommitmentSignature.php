@@ -9,6 +9,8 @@ class CommitmentSignature extends Model
 {
     use HasFactory;
 
+    protected $table = 'commitment_signature';
+
     protected $fillable = [
         'assessment_id',
         'user_id',

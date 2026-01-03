@@ -19,14 +19,14 @@
     @stack('styles')
 </head>
 
-<body class="h-full font-work" x-data="{ sidebarOpen: false }">
+<body class="h-full font-work" x-data="{ sidebarOpen: false }" @keydown.escape.window="sidebarOpen = false">
     <div class="min-h-full">
         <!-- Sidebar untuk Mobile -->
         <div x-show="sidebarOpen" x-transition:enter="transition-opacity ease-linear duration-300"
             x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
             x-transition:leave="transition-opacity ease-linear duration-300" x-transition:leave-start="opacity-100"
             x-transition:leave-end="opacity-0" class="relative z-50 lg:hidden" role="dialog" aria-modal="true">
-            <div class="fixed inset-0 bg-gray-900/80"></div>
+            <div class="fixed inset-0 bg-gray-900/80" @click="sidebarOpen = false"></div>
             <div class="fixed inset-0 flex">
                 <div x-show="sidebarOpen" x-transition:enter="transition ease-in-out duration-300 transform"
                     x-transition:enter-start="-translate-x-full" x-transition:enter-end="translate-x-0"
