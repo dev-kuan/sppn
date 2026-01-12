@@ -5,7 +5,8 @@
 
 class AutoSave {
     constructor(options = {}) {
-        this.debounceTime = options.debounceTime || 1000;
+        this.debounceTime = options.debounceTime || 300;
+        this.batchDelay = options.batchDelay || 50;
         this.saveEndpoint = options.saveEndpoint;
         this.csrfToken = options.csrfToken || document.querySelector('meta[name="csrf-token"]')?.content;
         this.onSuccess = options.onSuccess || (() => {});
@@ -13,23 +14,41 @@ class AutoSave {
         this.onSaving = options.onSaving || (() => {});
 
         this.saveTimeout = null;
-        this.requestQueue = [];
+        this.batchTimeout = null;
+        this.pendingChanges = new Map();
         this.isSaving = false;
+        this.failedAttempts = 0;
+        this.maxRetries = 3;
+
+        console.log('AutoSave initialized with endpoint:', this.saveEndpoint);
     }
 
     /**
-     * Queue a save request with debouncing
+     * Queue a save request with intelligent batching
      */
     save(data) {
-        // Clear previous timeout
+        console.log('AutoSave: Queueing save for', data);
+
+        const key = `${data.observation_item_id}_${data.hari}`;
+        this.pendingChanges.set(key, data);
+
+        if (this.batchTimeout) {
+            clearTimeout(this.batchTimeout);
+        }
+
+        this.batchTimeout = setTimeout(() => {
+            this.debouncedSave();
+        }, this.batchDelay);
+    }
+
+    /**
+     * Debounced save to prevent too many requests
+     */
+    debouncedSave() {
         if (this.saveTimeout) {
             clearTimeout(this.saveTimeout);
         }
 
-        // Add to queue
-        this.requestQueue.push(data);
-
-        // Debounce the save
         this.saveTimeout = setTimeout(() => {
             this.processSaveQueue();
         }, this.debounceTime);
@@ -39,54 +58,124 @@ class AutoSave {
      * Process the save queue
      */
     async processSaveQueue() {
-        if (this.isSaving || this.requestQueue.length === 0) {
+        if (this.isSaving || this.pendingChanges.size === 0) {
+            console.log('AutoSave: Skip processing -', {isSaving: this.isSaving, queueSize: this.pendingChanges.size});
             return;
         }
+
+        console.log('AutoSave: Processing queue with', this.pendingChanges.size, 'items');
 
         this.isSaving = true;
         this.onSaving(true);
 
-        // Get the latest request from queue
-        const data = this.requestQueue[this.requestQueue.length - 1];
-        this.requestQueue = [];
+        const changesArray = Array.from(this.pendingChanges.values());
+        const changesCopy = new Map(this.pendingChanges);
+        this.pendingChanges.clear();
 
         try {
-            const response = await fetch(this.saveEndpoint, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': this.csrfToken,
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify(data)
-            });
-
-            const result = await response.json();
-
-            if (response.ok && result.success) {
-                this.onSuccess(result);
+            if (changesArray.length === 1) {
+                await this.saveSingle(changesArray[0]);
             } else {
-                throw new Error(result.message || 'Save failed');
+                await this.saveInParallel(changesArray);
             }
+
+            this.failedAttempts = 0;
+            console.log('AutoSave: Successfully saved', changesArray.length, 'items');
         } catch (error) {
-            console.error('Auto-save error:', error);
-            this.onError(error);
+            console.error('AutoSave: Save error:', error);
+            this.failedAttempts++;
+
+            if (this.failedAttempts < this.maxRetries) {
+                console.log('AutoSave: Retrying... Attempt', this.failedAttempts);
+                changesCopy.forEach((value, key) => {
+                    this.pendingChanges.set(key, value);
+                });
+
+                const retryDelay = Math.min(1000 * Math.pow(2, this.failedAttempts), 5000);
+                setTimeout(() => {
+                    this.processSaveQueue();
+                }, retryDelay);
+            } else {
+                this.onError(error);
+                this.failedAttempts = 0;
+            }
         } finally {
             this.isSaving = false;
             this.onSaving(false);
 
-            // Process remaining queue if any
-            if (this.requestQueue.length > 0) {
+            if (this.pendingChanges.size > 0) {
                 setTimeout(() => this.processSaveQueue(), 100);
             }
         }
     }
 
     /**
+     * Save a single observation
+     */
+    async saveSingle(data) {
+        console.log('AutoSave: Sending request to', this.saveEndpoint, 'with data:', data);
+
+        const response = await fetch(this.saveEndpoint, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': this.csrfToken,
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify(data)
+        });
+
+        const result = await response.json();
+        console.log('AutoSave: Server response:', result);
+
+        if (response.ok && result.success) {
+            this.onSuccess(result);
+        } else {
+            throw new Error(result.message || 'Save failed');
+        }
+    }
+
+    /**
+     * Save multiple observations in parallel
+     */
+    async saveInParallel(dataArray) {
+        console.log('AutoSave: Saving in parallel:', dataArray.length, 'items');
+
+        const batchSize = 3;
+        const results = [];
+
+        for (let i = 0; i < dataArray.length; i += batchSize) {
+            const batch = dataArray.slice(i, i + batchSize);
+            const promises = batch.map(data => this.saveSingle(data).catch(err => {
+                console.error('AutoSave: Batch item failed:', err);
+                throw err;
+            }));
+
+            const batchResults = await Promise.allSettled(promises);
+            results.push(...batchResults);
+        }
+
+        const failed = results.filter(r => r.status === 'rejected');
+        if (failed.length > 0) {
+            throw new Error(`${failed.length} saves failed`);
+        }
+
+        const lastSuccess = results.reverse().find(r => r.status === 'fulfilled');
+        if (lastSuccess?.value) {
+            // Don't call onSuccess again as it was already called in saveSingle
+        }
+    }
+
+    /**
      * Force save immediately (skip debounce)
      */
-    async saveNow(data) {
-        this.requestQueue = [data];
+    async saveNow() {
+        if (this.saveTimeout) {
+            clearTimeout(this.saveTimeout);
+        }
+        if (this.batchTimeout) {
+            clearTimeout(this.batchTimeout);
+        }
         await this.processSaveQueue();
     }
 
@@ -97,7 +186,17 @@ class AutoSave {
         if (this.saveTimeout) {
             clearTimeout(this.saveTimeout);
         }
-        this.requestQueue = [];
+        if (this.batchTimeout) {
+            clearTimeout(this.batchTimeout);
+        }
+        this.pendingChanges.clear();
+    }
+
+    /**
+     * Check if there are pending changes
+     */
+    hasPendingChanges() {
+        return this.pendingChanges.size > 0 || this.isSaving;
     }
 }
 
@@ -143,7 +242,6 @@ class ScoreCalculator {
                 });
             });
 
-            // Map to score keys
             const variabelName = this.getVariabelName(variabelId);
             if (scores.hasOwnProperty(variabelName)) {
                 scores[variabelName] = variabelScore;
@@ -188,7 +286,6 @@ class ScoreCalculator {
      */
     calculateFrequency(item) {
         if (item.use_dynamic_frequency && item.frequency_rule) {
-            // Apply frequency rule
             const rule = item.frequency_rule.formula;
             for (let i = 0; i < rule.length; i++) {
                 if (this.daysInMonth <= rule[i].max_days) {
@@ -250,6 +347,10 @@ class Toast {
                     <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
                         <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd" />
                     </svg>
+                ` : type === 'error' ? `
+                    <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                    </svg>
                 ` : ''}
                 <span>${message}</span>
             </div>
@@ -257,7 +358,6 @@ class Toast {
 
         document.body.appendChild(toast);
 
-        // Auto remove after 3 seconds
         setTimeout(() => {
             toast.style.opacity = '0';
             toast.style.transform = 'translateY(1rem)';
@@ -266,7 +366,9 @@ class Toast {
     }
 }
 
-// Export for use in other files
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { AutoSave, ScoreCalculator, Toast };
+// Make available globally
+if (typeof window !== 'undefined') {
+    window.AutoSave = AutoSave;
+    window.ScoreCalculator = ScoreCalculator;
+    window.Toast = Toast;
 }

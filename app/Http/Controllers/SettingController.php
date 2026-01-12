@@ -104,18 +104,18 @@ class SettingController extends Controller
     /**
      * Manage Aspek Penilaian
      */
-    // public function aspects()
-    // {
-    //     // $this->authorize('manage-observation-items');
+    public function aspects()
+    {
+        // $this->authorize('manage-observation-items');
 
-    //     $aspects = AssessmentAspect::with('variabel')
-    //         ->withCount('observationItems')
-    //         ->get();
+        $aspects = AssessmentAspect::with('variabel')
+            ->withCount('observationItems')
+            ->get();
 
-    //     $variabels = AssessmentVariabel::all();
+        $variabels = AssessmentVariabel::all();
 
-    //     return view('settings.aspects.index', compact('aspects', 'variabels'));
-    // }
+        return view('settings.aspects.index', compact('aspects', 'variabels'));
+    }
 
     public function storeAspect(Request $request)
     {
@@ -182,7 +182,7 @@ class SettingController extends Controller
     {
         // $this->authorize('manage-observation-items');
 
-        $query = ObservationItem::with(['variabel', 'aspek', 'frequencyRule']);
+        $query = ObservationItem::with(['variabel', 'aspect', 'frequencyRule']);
 
         // Filter by variabel
         if ($request->has('variabel_id') && $request->variabel_id != '') {
@@ -190,8 +190,8 @@ class SettingController extends Controller
         }
 
         // Filter by aspek
-        if ($request->has('aspek_id') && $request->aspek_id != '') {
-            $query->where('aspek_id', $request->aspek_id);
+        if ($request->has('aspect_id') && $request->aspect_id != '') {
+            $query->where('aspect_id', $request->aspect_id);
         }
 
         // Filter by status

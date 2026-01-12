@@ -492,7 +492,7 @@ class ObservationItemSeeder extends Seeder
             ['kode' => 'SN-AG-03', 'nama' => 'Menunjukan sikap marah-marah', 'bobot' => 0.99],
             ['kode' => 'SN-AG-04', 'nama' => 'Berteriak-teriak', 'bobot' => 1.01],
             ['kode' => 'SN-AG-05', 'nama' => 'Merusak CCTV/Inventaris lain', 'bobot' => 1.07],
-            ['kode' => 'SN-AG-06', 'nama' => 'Mengguncang atau menendang teralis ', 'bobot' => 1.02],
+            ['kode' => 'SN-AG-06', 'nama' => 'Mengguncang atau menendang teralis', 'bobot' => 1.02],
             ['kode' => 'SN-AG-07', 'nama' => 'Memanjat teralis', 'bobot' => 1.06],
         ];
 

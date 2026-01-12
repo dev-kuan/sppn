@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
-use Spatie\Activitylog\Traits\LogsActivity;
-use Spatie\Activitylog\LogOptions;
 use Carbon\Carbon;
+use Spatie\Activitylog\LogOptions;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Database\Eloquent\Model;
+use Spatie\Activitylog\Traits\LogsActivity;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Assessment extends Model
 {
@@ -154,46 +155,110 @@ class Assessment extends Model
     }
 
     // Methods
+// Methods
     public function calculateScores()
     {
-        $daysInMonth = $this->tanggal_penilaian->daysInMonth;
+        try {
+            Log::info('=== Starting Score Calculation ===', [
+                'assessment_id' => $this->id,
+                'tanggal_penilaian' => $this->tanggal_penilaian
+            ]);
 
-        // Get all observation items grouped by variabel and aspek
-        $observationItems = ObservationItem::aktif()->ordered()->get();
+            $daysInMonth = $this->tanggal_penilaian->daysInMonth;
 
-        $variabelScores = [];
+            Log::info('Days in month: ' . $daysInMonth);
 
-        foreach (['pembinaan_kepribadian', 'pembinaan_kemandirian', 'sikap', 'kondisi_mental'] as $variabel) {
-            $items = $observationItems->where('variabel', $variabel);
-            $totalSkor = 0;
+            // Get all active observation items with their relationships
+            $observationItems = ObservationItem::with(['aspect.variabel'])
+                ->aktif()
+                ->get();
 
-            foreach ($items as $item) {
-                $checkedDays = $this->dailyObservations()
-                    ->where('observation_item_id', $item->id)
-                    ->where('is_checked', true)
-                    ->count();
+            Log::info('Total observation items: ' . $observationItems->count());
 
-                $frequency = $item->calculateFrequency($daysInMonth);
+            // Initialize scores array
+            $variabelScores = [
+                'Pembinaan Kepribadian' => 0,
+                'Pembinaan Kemandirian' => 0,
+                'Penilaian Sikap' => 0,
+                'Kondisi Mental' => 0,
+            ];
 
-                // Calculate item score
-                if ($frequency > 0) {
-                    $skorItem = ($checkedDays / $frequency) * $item->bobot;
-                    $totalSkor += $skorItem;
+            // Group items by variabel
+            $groupedByVariabel = $observationItems->groupBy(function($item) {
+                return $item->aspect->variabel->nama;
+            });
+
+            Log::info('Grouped variabels: ' . $groupedByVariabel->keys()->implode(', '));
+
+            // Calculate score for each variabel
+            foreach ($groupedByVariabel as $variabelNama => $items) {
+                $variabelTotalScore = 0;
+
+                Log::info("Processing variabel: {$variabelNama} with {$items->count()} items");
+
+                foreach ($items as $item) {
+                    // Count checked days for this item
+                    $checkedCount = $this->dailyObservations()
+                        ->where('observation_item_id', $item->id)
+                        ->where('is_checked', true)
+                        ->count();
+
+                    // Calculate frequency for this item
+                    $frequency = $item->calculateFrequency($daysInMonth);
+
+                    Log::debug("Item: {$item->nama_item}", [
+                        'checked' => $checkedCount,
+                        'frequency' => $frequency,
+                        'bobot' => $item->bobot
+                    ]);
+
+                    // Calculate item score
+                    if ($frequency > 0) {
+                        $itemScore = ($checkedCount / $frequency) * $item->bobot;
+                        $variabelTotalScore += $itemScore;
+
+                        Log::debug("Item score: {$itemScore}");
+                    }
+                }
+
+                // Store in array with exact variabel name
+                if (isset($variabelScores[$variabelNama])) {
+                    $variabelScores[$variabelNama] = $variabelTotalScore;
+                    Log::info("Variabel '{$variabelNama}' total score: {$variabelTotalScore}");
+                } else {
+                    Log::warning("Variabel '{$variabelNama}' not found in predefined list");
                 }
             }
 
-            $variabelScores[$variabel] = $totalSkor;
+            // Map to assessment fields
+            $this->skor_kepribadian = $variabelScores['Pembinaan Kepribadian'] ?? 0;
+            $this->skor_kemandirian = $variabelScores['Pembinaan Kemandirian'] ?? 0;
+            $this->skor_sikap = $variabelScores['Penilaian Sikap'] ?? 0;
+            $this->skor_mental = $variabelScores['Kondisi Mental'] ?? 0;
+            $this->skor_total = $this->skor_kepribadian + $this->skor_kemandirian +
+                               $this->skor_sikap + $this->skor_mental;
+
+            Log::info('Final scores:', [
+                'kepribadian' => $this->skor_kepribadian,
+                'kemandirian' => $this->skor_kemandirian,
+                'sikap' => $this->skor_sikap,
+                'mental' => $this->skor_mental,
+                'total' => $this->skor_total
+            ]);
+
+            $this->save();
+
+            Log::info('=== Score Calculation Complete ===');
+
+            return $this;
+
+        } catch (\Exception $e) {
+            Log::error('Error calculating scores: ' . $e->getMessage(), [
+                'assessment_id' => $this->id,
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            throw $e;
         }
-
-        // Update assessment scores
-        $this->skor_kepribadian = $variabelScores['pembinaan_kepribadian'] ?? 0;
-        $this->skor_kemandirian = $variabelScores['pembinaan_kemandirian'] ?? 0;
-        $this->skor_sikap = $variabelScores['sikap'] ?? 0;
-        $this->skor_mental = $variabelScores['kondisi_mental'] ?? 0;
-        $this->skor_total = array_sum($variabelScores);
-
-        $this->save();
-
-        return $this;
     }
 }

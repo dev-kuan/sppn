@@ -12,6 +12,7 @@ use App\Models\AssessmentVariabel;
 use Illuminate\Support\Facades\DB;
 use App\Models\CommitmentStatement;
 use Illuminate\Support\Facades\Log;
+use Maatwebsite\Excel\Facades\Excel;
 
 class AssessmentController extends Controller
 {
@@ -368,6 +369,70 @@ class AssessmentController extends Controller
             Log::error('Error rejecting assessment: ' . $e->getMessage());
 
             return back()->with('error', 'Terjadi kesalahan saat menolak penilaian.');
+        }
+    }
+
+    public function exportTemplate(Assessment $assessment)
+    {
+        // $this->authorize('edit-penilaian');
+
+        try {
+            $fileName = 'Template_Penilaian_' .
+                        $assessment->inmate->no_registrasi . '_' .
+                        $assessment->tanggal_penilaian->format('Y-m') . '.xlsx';
+
+            return Excel::download(
+                new \App\Exports\AssessmentTemplateExport($assessment),
+                $fileName
+            );
+        } catch (\Exception $e) {
+            Log::error('Error exporting template: ' . $e->getMessage());
+            return back()->with('error', 'Terjadi kesalahan saat mengunduh template.');
+        }
+    }
+
+    public function import(Request $request, Assessment $assessment)
+    {
+        // $this->authorize('edit-penilaian');
+
+        $request->validate([
+            'file' => 'required|file|mimes:xlsx,xls|max:10240', // Max 10MB
+        ]);
+
+        DB::beginTransaction();
+        try {
+            $file = $request->file('file');
+
+            $import = new \App\Imports\AssessmentImport($assessment);
+            Excel::import($import, $file);
+
+            if ($import->hasErrors()) {
+                DB::rollBack();
+
+                $errorMessage = 'Import selesai dengan beberapa error:<br>';
+                foreach ($import->getErrors() as $error) {
+                    $errorMessage .= '- ' . $error . '<br>';
+                }
+
+                return back()->with('warning', $errorMessage);
+            }
+
+            //  monitoring user activity
+            activity()
+                ->performedOn($assessment)
+                ->causedBy(auth()->user())
+                ->log('Import data penilaian untuk: ' . $assessment->inmate->nama);
+
+            DB::commit();
+
+            return redirect()->route('assessments.edit', $assessment)
+                ->with('success', 'Data berhasil diimport. Total ' . $import->getSuccessCount() . ' observasi diproses.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Error importing assessment: ' . $e->getMessage());
+
+            return back()->with('error', 'Terjadi kesalahan saat mengimport file: ' . $e->getMessage());
         }
     }
     private function initializeDailyObservations(Assessment $assessment)

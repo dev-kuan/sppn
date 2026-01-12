@@ -75,6 +75,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::middleware('permission:create-penilaian')->group(function () {
         Route::get('assessments/create', [AssessmentController::class, 'create'])->name('assessments.create');
         Route::post('assessments', [AssessmentController::class, 'store'])->name('assessments.store');
+        Route::get('/{assessment}/export-template', [AssessmentController::class, 'exportTemplate'])->name('assessments.export-template');
+    Route::post('/{assessment}/import', [AssessmentController::class, 'import'])->name('assessments.import');
     });
     Route::middleware('permission:view-penilaian')->group(function () {
         Route::get('assessments', [AssessmentController::class, 'index'])->name('assessments.index');
@@ -88,6 +90,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('assessments/{assessment}/observation',
             [AssessmentController::class, 'updateObservation']
         )->name('assessments.update-observation');
+        Route::get('/{assessment}/export-template', [AssessmentController::class, 'exportTemplate'])->name('assessments.export-template');
+    Route::post('/{assessment}/import', [AssessmentController::class, 'import'])->name('assessments.import');
     });
 
     Route::middleware('permission:submit-penilaian')->post(
