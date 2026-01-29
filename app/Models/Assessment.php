@@ -53,7 +53,7 @@ class Assessment extends Model
     // Relationships
     public function inmate()
     {
-        return $this->belongsTo(Inmate::class);
+        return $this->belongsTo(Inmate::class, 'inmate_id');
     }
 
     public function creator()
@@ -180,7 +180,7 @@ class Assessment extends Model
                 'Pembinaan Kepribadian' => 0,
                 'Pembinaan Kemandirian' => 0,
                 'Penilaian Sikap' => 0,
-                'Kondisi Mental' => 0,
+                'Penilaian Kondisi Mental' => 0,
             ];
 
             // Group items by variabel
@@ -234,7 +234,7 @@ class Assessment extends Model
             $this->skor_kepribadian = $variabelScores['Pembinaan Kepribadian'] ?? 0;
             $this->skor_kemandirian = $variabelScores['Pembinaan Kemandirian'] ?? 0;
             $this->skor_sikap = $variabelScores['Penilaian Sikap'] ?? 0;
-            $this->skor_mental = $variabelScores['Kondisi Mental'] ?? 0;
+            $this->skor_mental = $variabelScores['Penilaian Kondisi Mental'] ?? 0;
             $this->skor_total = $this->skor_kepribadian + $this->skor_kemandirian +
                                $this->skor_sikap + $this->skor_mental;
 

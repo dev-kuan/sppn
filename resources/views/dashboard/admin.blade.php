@@ -174,7 +174,7 @@
                     @forelse($topPerformers as $assessment)
                     <tr>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                            {{ $assessment->inmate->nama }}
+                            {{ $assessment->inmate?->nama ?? 'Belum ada data' }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             {{ number_format($assessment->skor_total, 2) }}
@@ -215,7 +215,7 @@
                     @forelse($needsAttention as $assessment)
                     <tr>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                            {{ $assessment->inmate->nama }}
+                            {{ $assessment->inmate?->nama ?? 'Belum ada data' }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             {{ number_format($assessment->skor_total, 2) }}

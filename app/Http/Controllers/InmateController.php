@@ -2,14 +2,23 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreInmateRequest;
+use App\Http\Requests\UpdateInmateRequest;
 use App\Models\Inmate;
 use App\Models\CrimeType;
+use App\Services\InmateService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class InmateController extends Controller
 {
+    protected $inmateService;
+
+    public function __construct(InmateService $inmateService) {
+        $this->inmateService = $inmateService;
+    }
+
     public function index(Request $request)
     {
         // $this->authorize('view-narapidana');
@@ -51,49 +60,20 @@ class InmateController extends Controller
         return view('inmates.create', compact('crimeTypes'));
     }
 
-    public function store(Request $request)
+    public function store(StoreInmateRequest $request,)
     {
         // $this->authorize('create-narapidana');
 
-        $validated = $request->validate([
-            'no_registrasi' => 'required|string|max:255|unique:inmates,no_registrasi',
-            'nama' => 'required|string|max:255',
-            'tempat_lahir' => 'required|string|max:255',
-            'tanggal_lahir' => 'required|date|before:today',
-            'jenis_kelamin' => 'required|in:laki-laki,perempuan',
-            'agama' => 'required|string|max:100',
-            'tingkat_pendidikan' => 'nullable|string|max:100',
-            'pekerjaan_terakhir' => 'nullable|string|max:100',
-            'lama_pidana_bulan' => 'required|integer|min:1',
-            'sisa_pidana_bulan' => 'required|integer|min:0',
-            'jumlah_residivisme' => 'nullable|integer|min:0',
-            'catatan_kesehatan' => 'nullable|string',
-            'pelatihan' => 'nullable|string|max:255',
-            'program_kerja' => 'nullable|string|max:255',
-            'crime_type_id' => 'required|exists:crime_types,id',
-            'tanggal_masuk' => 'required|date',
-            'tanggal_bebas' => 'nullable|date|after:tanggal_masuk',
-        ]);
-
-        DB::beginTransaction();
         try {
-            $inmate = Inmate::create($validated);
+            $inmate = $this->inmateService->storeInmate($request->validated());
 
-            activity()
-                ->performedOn($inmate)
-                ->causedBy(auth()->user())
-                ->log('Narapidana baru ditambahkan: ' . $inmate->nama);
-
-            DB::commit();
-
-            return redirect()->route('inmates.show', $inmate)
-                ->with('success', 'Data narapidana berhasil ditambahkan.');
+            return redirect()
+            ->route('inmates.show', $inmate)
+            ->with('success', 'Data narapidana berhasil ditambahkan.');
         } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Error creating inmate: ' . $e->getMessage());
-
-            return back()->withInput()
-                ->with('error', 'Terjadi kesalahan saat menyimpan data.');
+            return back()
+            ->withInput()
+            ->with('error', 'Terjadi kesalahan saat menyimpan data.');
         }
     }
 
@@ -124,50 +104,19 @@ class InmateController extends Controller
         return view('inmates.edit', compact('inmate', 'crimeTypes'));
     }
 
-    public function update(Request $request, Inmate $inmate)
+    public function update(UpdateInmateRequest $request, Inmate $inmate)
     {
         // $this->authorize('edit-narapidana');
-
-        $validated = $request->validate([
-            'no_registrasi' => 'required|string|max:255|unique:inmates,no_registrasi,' . $inmate->id,
-            'nama' => 'required|string|max:255',
-            'tempat_lahir' => 'required|string|max:255',
-            'tanggal_lahir' => 'required|date|before:today',
-            'jenis_kelamin' => 'required|in:laki-laki,perempuan',
-            'agama' => 'required|string|max:100',
-            'tingkat_pendidikan' => 'nullable|string|max:100',
-            'pekerjaan_terakhir' => 'nullable|string|max:100',
-            'lama_pidana_bulan' => 'required|integer|min:1',
-            'sisa_pidana_bulan' => 'required|integer|min:0',
-            'jumlah_residivisme' => 'nullable|integer|min:0',
-            'catatan_kesehatan' => 'nullable|string',
-            'pelatihan' => 'nullable|string|max:255',
-            'program_kerja' => 'nullable|string|max:255',
-            'crime_type_id' => 'required|exists:crime_types,id',
-            'status' => 'required|in:aktif,dirilis,dipindahkan',
-            'tanggal_masuk' => 'required|date',
-            'tanggal_bebas' => 'nullable|date|after:tanggal_masuk',
-        ]);
-
-        DB::beginTransaction();
         try {
-            $inmate->update($validated);
+            $inmate = $this->inmateService->updateInmate($inmate, $request->validated());
 
-            activity()
-                ->performedOn($inmate)
-                ->causedBy(auth()->user())
-                ->log('Data narapidana diupdate: ' . $inmate->nama);
-
-            DB::commit();
-
-            return redirect()->route('inmates.show', $inmate)
-                ->with('success', 'Data narapidana berhasil diperbarui.');
+            return redirect()
+            ->route('inmates.show', $inmate)
+            ->with('success', 'Data narapidana berhasil diperbarui.');
         } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Error updating inmate: ' . $e->getMessage());
-
-            return back()->withInput()
-                ->with('error', 'Terjadi kesalahan saat memperbarui data.');
+            return back()
+            ->withInput()
+            ->with('error', 'Terjadi kesalahan saat memperbarui data.');
         }
     }
 
@@ -175,53 +124,31 @@ class InmateController extends Controller
     {
         // $this->authorize('delete-narapidana');
 
-        DB::beginTransaction();
         try {
-            $inmateNama = $inmate->nama;
-
             // Soft delete
-            $inmate->delete();
+            $inmate = $this->inmateService->deleteInmate($inmate);
 
-            activity()
-                ->performedOn($inmate)
-                ->causedBy(auth()->user())
-                ->log('Narapidana dihapus: ' . $inmateNama);
-
-            DB::commit();
-
-            return redirect()->route('inmates.index')
-                ->with('success', 'Data narapidana berhasil dihapus.');
+            return redirect()
+            ->route('inmates.index')
+            ->with('success', 'Data narapidana dihapus.');
         } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Error deleting inmate: ' . $e->getMessage());
-
-            return back()->with('error', 'Terjadi kesalahan saat menghapus data.');
+            return back()
+            ->with('error', 'Terjadi kesalahan saat menghapus data.');
         }
     }
 
     public function restore($id)
     {
         // $this->authorize('delete-narapidana');
-
-        DB::beginTransaction();
         try {
-            $inmate = Inmate::withTrashed()->findOrFail($id);
-            $inmate->restore();
+            $inmate = $this->inmateService->restoreInmate($id);
 
-            activity()
-                ->performedOn($inmate)
-                ->causedBy(auth()->user())
-                ->log('Narapidana dipulihkan: ' . $inmate->nama);
-
-            DB::commit();
-
-            return redirect()->route('inmates.show', $inmate)
-                ->with('success', 'Data narapidana berhasil dipulihkan.');
+            return redirect()
+            ->route('inmates.show', $inmate)
+            ->with('success', 'Data narapidana berhasil dipulihkan.');
         } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Error restoring inmate: ' . $e->getMessage());
-
-            return back()->with('error', 'Terjadi kesalahan saat memulihkan data.');
+            return back()
+            ->with('error', 'Terjadi kesalahan saat memulihkan data.');
         }
     }
 

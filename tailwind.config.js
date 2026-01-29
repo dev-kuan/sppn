@@ -15,9 +15,6 @@ export default {
                 sans: ['Figtree', ...defaultTheme.fontFamily.sans],
                 work: ['Work Sans', 'sans-serif'],
             },
-            backgroundImage: {
-                'hero-img': "url('image/bg.jpg')",
-            }
         },
     },
 

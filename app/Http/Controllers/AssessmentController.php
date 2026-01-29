@@ -11,11 +11,22 @@ use App\Models\DailyObservation;
 use App\Models\AssessmentVariabel;
 use Illuminate\Support\Facades\DB;
 use App\Models\CommitmentStatement;
+use App\Services\AssessmentService;
 use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Facades\Excel;
+use App\Http\Requests\StoreAssessmentRequest;
+use App\Http\Requests\ImportAssessmentRequest;
+use App\Http\Requests\RejectAssessmentRequest;
+use App\Http\Requests\UpdateObservationRequest;
 
 class AssessmentController extends Controller
 {
+
+    protected $assessmentService;
+
+    public function __construct(AssessmentService $assessmentService) {
+        $this->assessmentService = $assessmentService;
+    }
 
     public function index(Request $request)
     {
@@ -86,67 +97,23 @@ class AssessmentController extends Controller
 
         return view('assessments.create', compact('inmate'));
     }
-    public function store(Request $request)
+    public function store(StoreAssessmentRequest $request)
     {
         // $this->authorize('create-penilaian');
-
-        $validated = $request->validate([
-            'inmate_id' => 'required|exists:inmates,id',
-            'tanggal_penilaian' => 'required|date',
-        ]);
-
-        DB::beginTransaction();
         try {
-            // Check duplicate
-            $exists = Assessment::where('inmate_id', $validated['inmate_id'])
-                ->whereMonth('tanggal_penilaian', Carbon::parse($validated['tanggal_penilaian'])->month)
-                ->whereYear('tanggal_penilaian', Carbon::parse($validated['tanggal_penilaian'])->year)
-                ->exists();
+           $assessment = $this->assessmentService->storeAssessment($request->validated());
 
-            if ($exists) {
-                return back()->with('error', 'Penilaian untuk bulan tersebut sudah ada.');
-            }
-
-            // Create assessment
-            $assessment = Assessment::create([
-                'inmate_id' => $validated['inmate_id'],
-                'tanggal_penilaian' => $validated['tanggal_penilaian'],
-                'status' => 'draf',
-                'created_by' => auth()->id(),
+           return redirect()
+           ->route('assessments.edit', $assessment)
+           ->with('success', 'Penilaian berhasil dibuat. Silakan lanjutkan pengisian.');
+        } catch (\Throwable $e) {
+            Log::error('Penilaian gagal disimpan: ', [
+                'error' => $e->getMessage()
             ]);
 
-            // Initialize daily observations
-            $this->initializeDailyObservations($assessment);
-
-            // Initialize commitment statements
-            CommitmentStatement::create([
-                'assessment_id' => $assessment->id,
-                'jenis' => 'nkri',
-                'is_signed' => false,
-            ]);
-
-            CommitmentStatement::create([
-                'assessment_id' => $assessment->id,
-                'jenis' => 'narkoba',
-                'is_signed' => false,
-            ]);
-
-            //  monitoring user activity
-            activity()
-                ->performedOn($assessment)
-                ->causedBy(auth()->user())
-                ->log('Penilaian baru dibuat untuk: ' . $assessment->inmate->nama);
-
-            DB::commit();
-
-            return redirect()->route('assessments.edit', $assessment)
-                ->with('success', 'Penilaian berhasil dibuat. Silakan lanjutkan pengisian.');
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Error creating assessment: ' . $e->getMessage());
-
-            return back()->withInput()
-                ->with('error', 'Terjadi kesalahan saat membuat penilaian.');
+            return back()
+            ->withInput()
+            ->with('error', 'Terjadi kesalahan saat membuat penilaian.');
         }
     }
     public function show(Assessment $assessment)
@@ -223,32 +190,11 @@ class AssessmentController extends Controller
 
         return view('assessments.edit', compact('assessment', 'variabels', 'observationData', 'daysInMonth'));
     }
-    public function updateObservation(Request $request, Assessment $assessment)
+    public function updateObservation(UpdateObservationRequest $request, Assessment $assessment)
     {
         // $this->authorize('edit-penilaian');
-
-        $validated = $request->validate([
-            'observation_item_id' => 'required|exists:observation_items,id',
-            'hari' => 'required|integer|min:1|max:31',
-            'is_checked' => 'required|boolean',
-            'catatan' => 'nullable|string',
-        ]);
-
         try {
-            $observation = DailyObservation::updateOrCreate(
-                [
-                    'assessment_id' => $assessment->id,
-                    'observation_item_id' => $validated['observation_item_id'],
-                    'hari' => $validated['hari'],
-                ],
-                [
-                    'is_checked' => $validated['is_checked'],
-                    'catatan' => $validated['catatan'],
-                ]
-            );
-
-            // Recalculate scores
-            $assessment->calculateScores();
+            $this->assessmentService->updateObservation($assessment, $request->validated());
 
             return response()->json([
                 'success' => true,
@@ -261,9 +207,11 @@ class AssessmentController extends Controller
                     'total' => $assessment->skor_total,
                 ],
             ]);
-        } catch (\Exception $e) {
-            Log::error('Error updating observation: ' . $e->getMessage());
-
+        } catch (\Throwable $e) {
+            Log::error('Observation gagal diubah: ', [
+                'assessment_id' => $assessment->id,
+                'error:' => $e->getMessage()
+            ]);
             return response()->json([
                 'success' => false,
                 'message' => 'Terjadi kesalahan saat menyimpan data',
@@ -274,31 +222,17 @@ class AssessmentController extends Controller
     {
         // $this->authorize('submit-penilaian');
 
-        // only draft can be submited
-        if ($assessment->status !== 'draf') {
-            return back()->with('error', 'Hanya penilaian dengan status draf yang dapat disubmit.');
-        }
-
-        DB::beginTransaction();
         try {
-            $assessment->update([
-                'status' => 'disubmit',
-                'submitted_at' => now(),
+            $this->assessmentService->submitAssessment($assessment);
+
+            return redirect()
+            ->route('assessments.show', $assessment)
+            ->with('success', 'Penilaian berhasil disubmit untuk persetujuan.');
+        } catch (\Throwable $e) {
+            Log::error('Penilaian gagal disubmit: ' , [
+                'assessment_id' => $assessment->id,
+                'error: ' => $e->getMessage()
             ]);
-
-            //  monitoring user activity
-            activity()
-                ->performedOn($assessment)
-                ->causedBy(auth()->user())
-                ->log('Penilaian disubmit untuk: ' . $assessment->inmate->nama);
-
-            DB::commit();
-
-            return redirect()->route('assessments.show', $assessment)
-                ->with('success', 'Penilaian berhasil disubmit untuk persetujuan.');
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Error submitting assessment: ' . $e->getMessage());
 
             return back()->with('error', 'Terjadi kesalahan saat submit penilaian.');
         }
@@ -307,66 +241,35 @@ class AssessmentController extends Controller
     {
         // $this->authorize('approve-penilaian');
 
-        // only submited can be approved
-        if ($assessment->status !== 'disubmit') {
-            return back()->with('error', 'Hanya penilaian yang sudah disubmit yang dapat disetujui.');
-        }
-
-        DB::beginTransaction();
         try {
-            $assessment->update([
-                'status' => 'diterima',
-                'approved_by' => auth()->id(),
-                'approved_at' => now(),
+            $this->assessmentService->approveAssessment($assessment);
+
+            return redirect()
+            ->route('assessments.show', $assessment)
+            ->with('success', 'Penilaian berhasil disetujui.');
+        } catch (\Throwable $e) {
+            Log::error('Penilaian gagal disetujui: ' , [
+                'assessment_id' => $assessment->id,
+                'error: ' => $e->getMessage()
             ]);
-
-            //  monitoring user activity
-            activity()
-                ->performedOn($assessment)
-                ->causedBy(auth()->user())
-                ->log('Penilaian disetujui untuk: ' . $assessment->inmate->nama);
-
-            DB::commit();
-
-            return redirect()->route('assessments.show', $assessment)
-                ->with('success', 'Penilaian berhasil disetujui.');
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Error approving assessment: ' . $e->getMessage());
 
             return back()->with('error', 'Terjadi kesalahan saat menyetujui penilaian.');
         }
     }
-    public function reject(Request $request, Assessment $assessment)
+    public function reject(RejectAssessmentRequest $request, Assessment $assessment)
     {
         // $this->authorize('approve-penilaian');
-
-        $validated = $request->validate([
-            'catatan' => 'required|string',
-        ]);
-
-        DB::beginTransaction();
         try {
-            $assessment->update([
-                'status' => 'ditolak',
-                'catatan' => $validated['catatan'],
-                'approved_by' => auth()->id(),
-                'approved_at' => now(),
+            $this->assessmentService->rejectAssessment($assessment, $request->validated);
+
+            return redirect()
+            ->route('assessments.show', $assessment)
+            ->with('info', 'Penilaian ditolak. Petugas dapat memperbaiki dan submit kembali.');
+        } catch (\Throwable $e) {
+            Log::error('Penilaian gagal ditolak: ' , [
+                'assessment_id' => $assessment->id,
+                'error: ' => $e->getMessage()
             ]);
-
-            //  monitoring user activity
-            activity()
-                ->performedOn($assessment)
-                ->causedBy(auth()->user())
-                ->log('Penilaian ditolak untuk: ' . $assessment->inmate->nama);
-
-            DB::commit();
-
-            return redirect()->route('assessments.show', $assessment)
-                ->with('info', 'Penilaian ditolak. Petugas dapat memperbaiki dan submit kembali.');
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Error rejecting assessment: ' . $e->getMessage());
 
             return back()->with('error', 'Terjadi kesalahan saat menolak penilaian.');
         }
@@ -386,69 +289,47 @@ class AssessmentController extends Controller
                 $fileName
             );
         } catch (\Exception $e) {
-            Log::error('Error exporting template: ' . $e->getMessage());
+            Log::error('Template gagal diexport: ' . $e->getMessage());
             return back()->with('error', 'Terjadi kesalahan saat mengunduh template.');
         }
     }
 
-    public function import(Request $request, Assessment $assessment)
+    public function import(ImportAssessmentRequest $request, Assessment $assessment)
     {
         // $this->authorize('edit-penilaian');
 
-        $request->validate([
-            'file' => 'required|file|mimes:xlsx,xls|max:10240', // Max 10MB
-        ]);
-
-        DB::beginTransaction();
         try {
-            $file = $request->file('file');
+            $result = $this->assessmentService->importAssessment(
+                $assessment,
+                $request->validated()->file('file')
+            );
 
-            $import = new \App\Imports\AssessmentImport($assessment);
-            Excel::import($import, $file);
-
-            if ($import->hasErrors()) {
-                DB::rollBack();
-
-                $errorMessage = 'Import selesai dengan beberapa error:<br>';
-                foreach ($import->getErrors() as $error) {
-                    $errorMessage .= '- ' . $error . '<br>';
+            if (! $result->success) {
+                $errorMessage = "Import selesai dengan beberapa error:\n";
+                foreach ($result->errors as $error) {
+                    $errorMessage .= "- {$error}\n";
                 }
 
-                return back()->with('warning', $errorMessage);
+                return back()->with('warning', nl2br($errorMessage));
             }
 
-            //  monitoring user activity
-            activity()
-                ->performedOn($assessment)
-                ->causedBy(auth()->user())
-                ->log('Import data penilaian untuk: ' . $assessment->inmate->nama);
+            return redirect()
+                ->route('assessments.edit', $assessment)
+                ->with(
+                    'success',
+                    "Data berhasil diimport. Total {$result->successCount} observasi diproses."
+                );
 
-            DB::commit();
+        } catch (\Throwable $e) {
+            Log::error('Penilaian gagal diimport', [
+                'assessment_id' => $assessment->id,
+                'error' => $e->getMessage(),
+            ]);
 
-            return redirect()->route('assessments.edit', $assessment)
-                ->with('success', 'Data berhasil diimport. Total ' . $import->getSuccessCount() . ' observasi diproses.');
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Error importing assessment: ' . $e->getMessage());
-
-            return back()->with('error', 'Terjadi kesalahan saat mengimport file: ' . $e->getMessage());
-        }
-    }
-    private function initializeDailyObservations(Assessment $assessment)
-    {
-        $daysInMonth = $assessment->tanggal_penilaian->daysInMonth;
-        $observationItems = ObservationItem::aktif()->get();
-
-        foreach ($observationItems as $item) {
-            for ($day = 1; $day <= $daysInMonth; $day++) {
-                DailyObservation::create([
-                    'assessment_id' => $assessment->id,
-                    'observation_item_id' => $item->id,
-                    'hari' => $day,
-                    'is_checked' => false,
-                ]);
-            }
+            return back()->with(
+                'error',
+                'Terjadi kesalahan saat mengimport file.'
+            );
         }
     }
 }

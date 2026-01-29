@@ -73,6 +73,7 @@ class DashboardController extends Controller
 
         // Top performers
         $data['topPerformers'] = Assessment::with('inmate')
+            ->whereHas('inmate')
             ->diterima()
             ->orderBy('skor_total', 'desc')
             ->limit(5)
@@ -80,6 +81,7 @@ class DashboardController extends Controller
 
         // Inmates needing attention
         $data['needsAttention'] = Assessment::with('inmate')
+            ->whereHas('inmate')
             ->diterima()
             ->orderBy('skor_total', 'asc')
             ->limit(5)
