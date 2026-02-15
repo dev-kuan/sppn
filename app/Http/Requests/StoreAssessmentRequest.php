@@ -22,7 +22,7 @@ class StoreAssessmentRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'inmate_id' => 'required|exists:inmates,id',
+            'inmate_id' => 'required',
             'tanggal_penilaian' => 'required|date',
         ];
     }

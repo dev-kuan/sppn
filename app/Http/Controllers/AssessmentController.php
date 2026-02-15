@@ -24,7 +24,8 @@ class AssessmentController extends Controller
 
     protected $assessmentService;
 
-    public function __construct(AssessmentService $assessmentService) {
+    public function __construct(AssessmentService $assessmentService)
+    {
         $this->assessmentService = $assessmentService;
     }
 
@@ -33,7 +34,8 @@ class AssessmentController extends Controller
 
         // $this->authorize('view-penilaian');
 
-        $query = Assessment::with(['inmate', 'creator']);
+        $query = Assessment::with(['inmate', 'creator'])
+            ->whereHas('inmate');
 
         // filter by inmate
         if ($request->has('inmate_id') && $request->inmate_id != '') {
@@ -88,7 +90,9 @@ class AssessmentController extends Controller
         $existingAssessment = Assessment::where('inmate_id', $inmate->id)
             ->whereMonth('tanggal_penilaian', $currentMonth)
             ->whereYear('tanggal_penilaian', $currentYear)
+            ->withoutTrashed()
             ->first();
+
 
         if ($existingAssessment) {
             return redirect()->route('assessments.edit', $existingAssessment)
@@ -101,19 +105,19 @@ class AssessmentController extends Controller
     {
         // $this->authorize('create-penilaian');
         try {
-           $assessment = $this->assessmentService->storeAssessment($request->validated());
+            $assessment = $this->assessmentService->storeAssessment($request->validated());
 
-           return redirect()
-           ->route('assessments.edit', $assessment)
-           ->with('success', 'Penilaian berhasil dibuat. Silakan lanjutkan pengisian.');
+            return redirect()
+                ->route('assessments.edit', $assessment)
+                ->with('success', 'Penilaian berhasil dibuat. Silakan lanjutkan pengisian.');
         } catch (\Throwable $e) {
             Log::error('Penilaian gagal disimpan: ', [
                 'error' => $e->getMessage()
             ]);
 
             return back()
-            ->withInput()
-            ->with('error', 'Terjadi kesalahan saat membuat penilaian.');
+                ->withInput()
+                ->with('error', 'Terjadi kesalahan saat membuat penilaian.');
         }
     }
     public function show(Assessment $assessment)
@@ -154,57 +158,115 @@ class AssessmentController extends Controller
 
         return view('assessments.show', compact('assessment', 'variabels', 'observationData', 'daysInMonth'));
     }
-    public function edit(Assessment $assessment)
-    {
-        // $this->authorize('edit-penilaian');
+public function edit(Assessment $assessment)
+{
+    // only draft & reject can be edited
+    if (!in_array($assessment->status, ['draf', 'ditolak'])) {
+        return redirect()->route('assessments.show', $assessment)
+            ->with('error', 'Penilaian yang sudah disubmit tidak dapat diedit.');
+    }
 
-        // only draft & reject can be edited
-        if (!in_array($assessment->status, ['draf', 'ditolak'])) {
-            return redirect()->route('assessments.show', $assessment)
-                ->with('error', 'Penilaian yang sudah disubmit tidak dapat diedit.');
-        }
+    $assessment->load('inmate', 'dailyObservations');
 
-        $assessment->load('inmate');
+    // Get observation structure
+    $variabels = AssessmentVariabel::with(['aspect.observationItems' => function ($q) {
+        $q->aktif()->ordered();
+    }])->get();
 
-        // Get observation structure
-        $variabels = AssessmentVariabel::with(['aspect.observationItems' => function ($q) {
-            $q->aktif()->ordered();
-        }])->get();
+    $daysInMonth = $assessment->tanggal_penilaian->daysInMonth;
 
-        $daysInMonth = $assessment->tanggal_penilaian->daysInMonth;
+    // ✅ Mapping nama variabel ke key yang pendek
+    $variabelMapping = [
+        'pembinaan kepribadian' => 'kepribadian',
+        'pembinaan kemandirian' => 'kemandirian',
+        'penilaian sikap' => 'sikap',
+        'penilaian kondisi mental' => 'mental'
+    ];
 
-        // Get existing observations
-        $observationData = [];
-        foreach ($variabels as $variabel) {
-            foreach ($variabel->aspect as $aspek) {
-                foreach ($aspek->observationItems as $item) {
-                    $observations = DailyObservation::where('assessment_id', $assessment->id)
-                        ->where('observation_item_id', $item->id)
-                        ->get()
-                        ->keyBy('hari');
+    // Format data observationItems dengan struktur yang benar
+    $observationItemsArray = [];
 
-                    $observationData[$item->id] = $observations;
-                }
+    foreach ($variabels as $variabel) {
+        $variabelNamaLower = strtolower($variabel->nama);
+        $variabelKey = $variabelMapping[$variabelNamaLower] ?? $variabelNamaLower;
+
+        foreach ($variabel->aspect as $aspek) {
+            foreach ($aspek->observationItems as $item) {
+                $observationItemsArray[] = [
+                    'id' => $item->id,
+                    'bobot' => (float) $item->bobot,
+                    'frekuensi' => (int) $item->frekuensi,
+                    'variabel_id' => $variabel->id,
+                    'variabel_nama' => $variabelNamaLower,  // nama asli dari DB
+                    'variabel_key' => $variabelKey,  // ✅ key pendek untuk mapping
+                    'aspek_id' => $aspek->id,
+                    'aspek_nama' => $aspek->nama
+                ];
             }
         }
-
-        return view('assessments.edit', compact('assessment', 'variabels', 'observationData', 'daysInMonth'));
     }
+
+    // Prepare existing observations data
+    $observationData = [];
+    foreach ($assessment->dailyObservations as $obs) {
+        $observationData[$obs->observation_item_id][$obs->hari] = $obs;
+    }
+
+    // Prepare checked observations untuk inisialisasi frontend
+    $checkedObservations = $assessment->dailyObservations()
+        ->where('is_checked', true)
+        ->get()
+        ->map(function($obs) {
+            return [
+                'observation_item_id' => $obs->observation_item_id,
+                'hari' => $obs->hari,
+                'is_checked' => true
+            ];
+        })
+        ->toArray();
+
+    return view('assessments.edit', compact(
+        'assessment',
+        'variabels',
+        'daysInMonth',
+        'observationItemsArray',
+        'observationData',
+        'checkedObservations'
+    ));
+}
+    public function destroy(Assessment $assessment)
+    {
+        // $this->authorize('delete-narapidana');
+
+        try {
+            // Soft delete
+            $assessment = $this->assessmentService->deleteAssessment($assessment);
+
+            return redirect()
+                ->route('assessments.index')
+                ->with('success', 'Data penilaian dihapus.');
+        } catch (\Exception $e) {
+            return back()
+                ->with('error', 'Terjadi kesalahan saat menghapus data.');
+        }
+    }
+
     public function updateObservation(UpdateObservationRequest $request, Assessment $assessment)
     {
         // $this->authorize('edit-penilaian');
         try {
-            $this->assessmentService->updateObservation($assessment, $request->validated());
+            $updatedAssessment = $this->assessmentService
+                ->updateObservation($assessment, $request->validated());
 
             return response()->json([
                 'success' => true,
                 'message' => 'Data berhasil disimpan',
                 'scores' => [
-                    'kepribadian' => $assessment->skor_kepribadian,
-                    'kemandirian' => $assessment->skor_kemandirian,
-                    'sikap' => $assessment->skor_sikap,
-                    'mental' => $assessment->skor_mental,
-                    'total' => $assessment->skor_total,
+                    'kepribadian' => $updatedAssessment->skor_kepribadian,
+                    'kemandirian' => $updatedAssessment->skor_kemandirian,
+                    'sikap' => $updatedAssessment->skor_sikap,
+                    'mental' => $updatedAssessment->skor_mental,
+                    'total' => $updatedAssessment->skor_total,
                 ],
             ]);
         } catch (\Throwable $e) {
@@ -226,10 +288,10 @@ class AssessmentController extends Controller
             $this->assessmentService->submitAssessment($assessment);
 
             return redirect()
-            ->route('assessments.show', $assessment)
-            ->with('success', 'Penilaian berhasil disubmit untuk persetujuan.');
+                ->route('assessments.show', $assessment)
+                ->with('success', 'Penilaian berhasil disubmit untuk persetujuan.');
         } catch (\Throwable $e) {
-            Log::error('Penilaian gagal disubmit: ' , [
+            Log::error('Penilaian gagal disubmit: ', [
                 'assessment_id' => $assessment->id,
                 'error: ' => $e->getMessage()
             ]);
@@ -245,10 +307,10 @@ class AssessmentController extends Controller
             $this->assessmentService->approveAssessment($assessment);
 
             return redirect()
-            ->route('assessments.show', $assessment)
-            ->with('success', 'Penilaian berhasil disetujui.');
+                ->route('assessments.show', $assessment)
+                ->with('success', 'Penilaian berhasil disetujui.');
         } catch (\Throwable $e) {
-            Log::error('Penilaian gagal disetujui: ' , [
+            Log::error('Penilaian gagal disetujui: ', [
                 'assessment_id' => $assessment->id,
                 'error: ' => $e->getMessage()
             ]);
@@ -263,10 +325,10 @@ class AssessmentController extends Controller
             $this->assessmentService->rejectAssessment($assessment, $request->validated);
 
             return redirect()
-            ->route('assessments.show', $assessment)
-            ->with('info', 'Penilaian ditolak. Petugas dapat memperbaiki dan submit kembali.');
+                ->route('assessments.show', $assessment)
+                ->with('info', 'Penilaian ditolak. Petugas dapat memperbaiki dan submit kembali.');
         } catch (\Throwable $e) {
-            Log::error('Penilaian gagal ditolak: ' , [
+            Log::error('Penilaian gagal ditolak: ', [
                 'assessment_id' => $assessment->id,
                 'error: ' => $e->getMessage()
             ]);
@@ -281,8 +343,8 @@ class AssessmentController extends Controller
 
         try {
             $fileName = 'Template_Penilaian_' .
-                        $assessment->inmate->no_registrasi . '_' .
-                        $assessment->tanggal_penilaian->format('Y-m') . '.xlsx';
+                $assessment->inmate->no_registrasi . '_' .
+                $assessment->tanggal_penilaian->format('d-m-Y') . '.xlsx';
 
             return Excel::download(
                 new \App\Exports\AssessmentTemplateExport($assessment),
@@ -301,7 +363,7 @@ class AssessmentController extends Controller
         try {
             $result = $this->assessmentService->importAssessment(
                 $assessment,
-                $request->validated()->file('file')
+                $request->file('file')
             );
 
             if (! $result->success) {
@@ -319,7 +381,6 @@ class AssessmentController extends Controller
                     'success',
                     "Data berhasil diimport. Total {$result->successCount} observasi diproses."
                 );
-
         } catch (\Throwable $e) {
             Log::error('Penilaian gagal diimport', [
                 'assessment_id' => $assessment->id,

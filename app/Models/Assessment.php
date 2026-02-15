@@ -146,7 +146,7 @@ class Assessment extends Model
     public function scopeByMonth($query, $month, $year)
     {
         return $query->whereMonth('tanggal_penilaian', $month)
-                     ->whereYear('tanggal_penilaian', $year);
+            ->whereYear('tanggal_penilaian', $year);
     }
 
     public function scopeByInmate($query, $inmateId)
@@ -155,103 +155,117 @@ class Assessment extends Model
     }
 
     // Methods
-// Methods
+    // Methods
     public function calculateScores()
     {
         try {
-            Log::info('=== Starting Score Calculation ===', [
+            Log::info('=== START SCORE CALCULATION ===', [
                 'assessment_id' => $this->id,
-                'tanggal_penilaian' => $this->tanggal_penilaian
+                'tanggal_penilaian' => $this->tanggal_penilaian,
             ]);
 
-            $daysInMonth = $this->tanggal_penilaian->daysInMonth;
-
-            Log::info('Days in month: ' . $daysInMonth);
-
-            // Get all active observation items with their relationships
-            $observationItems = ObservationItem::with(['aspect.variabel'])
+            $observationItems = ObservationItem::with('aspect.variabel')
                 ->aktif()
                 ->get();
 
-            Log::info('Total observation items: ' . $observationItems->count());
+            Log::info('Total observation items', [
+                'count' => $observationItems->count()
+            ]);
 
-            // Initialize scores array
-            $variabelScores = [
-                'Pembinaan Kepribadian' => 0,
-                'Pembinaan Kemandirian' => 0,
-                'Penilaian Sikap' => 0,
-                'Penilaian Kondisi Mental' => 0,
+            $scores = [
+                'kepribadian' => 0,
+                'kemandirian' => 0,
+                'sikap' => 0,
+                'mental' => 0,
             ];
 
-            // Group items by variabel
-            $groupedByVariabel = $observationItems->groupBy(function($item) {
-                return $item->aspect->variabel->nama;
-            });
+            // Group: variabel → aspek → items
+            $grouped = $observationItems->groupBy([
+                fn($item) => $item->aspect->variabel_id,
+                fn($item) => $item->aspect_id,
+            ]);
 
-            Log::info('Grouped variabels: ' . $groupedByVariabel->keys()->implode(', '));
+            foreach ($grouped as $variabelId => $aspeks) {
 
-            // Calculate score for each variabel
-            foreach ($groupedByVariabel as $variabelNama => $items) {
-                $variabelTotalScore = 0;
+                $variabelName = $this->mapVariabelName($variabelId);
+                $variabelScore = 0;
 
-                Log::info("Processing variabel: {$variabelNama} with {$items->count()} items");
+                Log::info('--- Processing Variabel ---', [
+                    'variabel_id' => $variabelId,
+                    'variabel_name' => $variabelName,
+                    'total_aspek' => $aspeks->count(),
+                ]);
 
-                foreach ($items as $item) {
-                    // Count checked days for this item
-                    $checkedCount = $this->dailyObservations()
-                        ->where('observation_item_id', $item->id)
-                        ->where('is_checked', true)
-                        ->count();
+                foreach ($aspeks as $aspekId => $items) {
 
-                    // Calculate frequency for this item
-                    $frequency = $item->calculateFrequency($daysInMonth);
+                    $itemsCountAspect = $items->count();
 
-                    Log::debug("Item: {$item->nama_item}", [
-                        'checked' => $checkedCount,
-                        'frequency' => $frequency,
-                        'bobot' => $item->bobot
+                    Log::info('Processing Aspek', [
+                        'aspek_id' => $aspekId,
+                        'jumlah_item' => $itemsCountAspect,
                     ]);
 
-                    // Calculate item score
-                    if ($frequency > 0) {
-                        $itemScore = ($checkedCount / $frequency) * $item->bobot;
-                        $variabelTotalScore += $itemScore;
+                    foreach ($items as $item) {
 
-                        Log::debug("Item score: {$itemScore}");
+                        $checkedCount = $this->dailyObservations()
+                            ->where('observation_item_id', $item->id)
+                            ->where('is_checked', true)
+                            ->count();
+
+                        $frequency = $item->frekuensi;
+
+                        if ($frequency > 0 && $itemsCountAspect > 0) {
+                            $itemScore =
+                                (($checkedCount / $frequency) * $item->bobot)
+                                * (100 / $itemsCountAspect);
+                        } else {
+                            $itemScore = 0;
+                        }
+
+                        $variabelScore += $itemScore;
+
+                        Log::debug('Item calculation', [
+                            'item_id' => $item->id,
+                            'item_nama' => $item->nama_item,
+                            'checked' => $checkedCount,
+                            'frequency' => $frequency,
+                            'bobot' => $item->bobot,
+                            'items_in_aspek' => $itemsCountAspect,
+                            'item_score' => $itemScore,
+                            'variabel_running_total' => $variabelScore,
+                        ]);
                     }
                 }
 
-                // Store in array with exact variabel name
-                if (isset($variabelScores[$variabelNama])) {
-                    $variabelScores[$variabelNama] = $variabelTotalScore;
-                    Log::info("Variabel '{$variabelNama}' total score: {$variabelTotalScore}");
-                } else {
-                    Log::warning("Variabel '{$variabelNama}' not found in predefined list");
+                if (isset($scores[$variabelName])) {
+                    $scores[$variabelName] = $variabelScore;
                 }
+
+                Log::info('Variabel result', [
+                    'variabel_name' => $variabelName,
+                    'variabel_score' => $variabelScore,
+                ]);
             }
 
-            // Map to assessment fields
-            $this->skor_kepribadian = $variabelScores['Pembinaan Kepribadian'] ?? 0;
-            $this->skor_kemandirian = $variabelScores['Pembinaan Kemandirian'] ?? 0;
-            $this->skor_sikap = $variabelScores['Penilaian Sikap'] ?? 0;
-            $this->skor_mental = $variabelScores['Penilaian Kondisi Mental'] ?? 0;
-            $this->skor_total = $this->skor_kepribadian + $this->skor_kemandirian +
-                               $this->skor_sikap + $this->skor_mental;
+            $this->skor_kepribadian = $scores['kepribadian'];
+            $this->skor_kemandirian = $scores['kemandirian'];
+            $this->skor_sikap = $scores['sikap'];
+            $this->skor_mental = $scores['mental'];
+            $this->skor_total = array_sum($scores);
 
-            Log::info('Final scores:', [
+            Log::info('FINAL SCORE RESULT', [
                 'kepribadian' => $this->skor_kepribadian,
                 'kemandirian' => $this->skor_kemandirian,
                 'sikap' => $this->skor_sikap,
                 'mental' => $this->skor_mental,
-                'total' => $this->skor_total
+                'total' => $this->skor_total,
             ]);
 
             $this->save();
 
-            Log::info('=== Score Calculation Complete ===');
+            Log::info('=== END SCORE CALCULATION ===');
 
             return $this;
-
         } catch (\Exception $e) {
             Log::error('Error calculating scores: ' . $e->getMessage(), [
                 'assessment_id' => $this->id,
@@ -260,5 +274,16 @@ class Assessment extends Model
 
             throw $e;
         }
+    }
+
+    private function mapVariabelName($variabelId)
+    {
+        return match ($variabelId) {
+            1 => 'kepribadian',
+            2 => 'kemandirian',
+            3 => 'sikap',
+            4 => 'mental',
+            default => 'unknown',
+        };
     }
 }

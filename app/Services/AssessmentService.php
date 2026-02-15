@@ -42,26 +42,41 @@ class AssessmentService {
         });
     }
 
-    public function updateObservation(Assessment $assessment, array $data) {
+    public function updateObservation(Assessment $assessment, array $data)
+{
+    return DB::transaction(function () use ($assessment, $data) {
 
-        return DB::transaction(function () use ($assessment, $data) {
-            $observation = DailyObservation::updateOrCreate(
-                [
-                    'assessment_id' => $assessment->id,
-                    'observation_item_id' => $data['observation_item_id'],
-                    'hari' => $data['hari'],
-                ],
-                [
-                    'is_checked' => $data['is_checked'],
-                    'catatan' => $data['catatan'],
-                ]
-            );
+        DailyObservation::updateOrCreate(
+            [
+                'assessment_id' => $assessment->id,
+                'observation_item_id' => $data['observation_item_id'],
+                'hari' => $data['hari'],
+            ],
+            [
+                'is_checked' => $data['is_checked'],
+                'catatan' => $data['catatan'],
+            ]
+        );
 
-            // Recalculate scores
-            $assessment->calculateScores();
+        return $assessment->calculateScores();
+    });
+}
 
-            return $observation;
-        });
+
+    public function deleteAssessment(Assessment $assessment) {
+        DB::beginTransaction();
+        try {
+            $assessment->delete();
+
+            $this->logAssessmentActivity($assessment, 'deleted');
+
+            DB::commit();
+            return true;
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Data Penilaian gagal dihapus: ' . $e->getMessage());
+            throw $e;
+        }
     }
 
     public function submitAssessment(Assessment $assessment) {
@@ -135,6 +150,7 @@ class AssessmentService {
         $exists = Assessment::where('inmate_id', $data['inmate_id'])
                 ->whereMonth('tanggal_penilaian', Carbon::parse($data['tanggal_penilaian'])->month)
                 ->whereYear('tanggal_penilaian', Carbon::parse($data['tanggal_penilaian'])->year)
+                ->withoutTrashed()
                 ->exists();
 
         if ($exists) {

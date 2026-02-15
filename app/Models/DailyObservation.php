@@ -28,7 +28,7 @@ class DailyObservation extends Model
         return $this->belongsTo(Assessment::class);
     }
 
-    public function observationItem()
+    public function observationItems()
     {
         return $this->belongsTo(ObservationItem::class);
     }

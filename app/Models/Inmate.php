@@ -102,4 +102,24 @@ class Inmate extends Model
               ->orWhere('no_registrasi', 'like', "%{$search}%");
         });
     }
+
+    protected static function booted()
+    {
+        static::deleting(function ($inmate) {
+
+            // Jika soft delete
+            if (! $inmate->isForceDeleting()) {
+                $inmate->assessments()->delete();
+            }
+
+            // Jika force delete
+            if ($inmate->isForceDeleting()) {
+                $inmate->assessments()->withTrashed()->forceDelete();
+            }
+        });
+
+        static::restoring(function ($inmate) {
+            $inmate->assessments()->withTrashed()->restore();
+        });
+    }
 }

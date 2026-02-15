@@ -2,14 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Assessment;
-use App\Models\Inmate;
-use App\Models\AssessmentVariabel;
-use Illuminate\Http\Request;
 use Carbon\Carbon;
-use Barryvdh\DomPDF\Facade\Pdf;
-use Maatwebsite\Excel\Facades\Excel;
+use App\Models\Inmate;
+use App\Models\Assessment;
+use Illuminate\Http\Request;
 use App\Exports\AssessmentExport;
+use Barryvdh\DomPDF\Facade\Pdf;
+use App\Models\AssessmentVariabel;
+use Maatwebsite\Excel\Facades\Excel;
 
 class ReportController extends Controller
 {
@@ -46,7 +46,7 @@ class ReportController extends Controller
         ])->findOrFail($validated['assessment_id']);
 
         // Get observation data
-        $variabels = AssessmentVariabel::with(['aspects.observationItems' => function ($q) {
+        $variabels = AssessmentVariabel::with(['aspect.observationItems' => function ($q) {
             $q->aktif()->ordered();
         }])->get();
 
@@ -83,17 +83,18 @@ class ReportController extends Controller
             ->get();
 
         $statistics = $this->calculateMonthlyStatistics($assessments);
+        $monthName = Carbon::createFromDate($validated['year'], $validated['month'])->format('F_Y');
 
         $pdf = Pdf::loadView('reports.monthly-pdf', [
             'assessments' => $assessments,
             'statistics' => $statistics,
+            'monthName' => $monthName,
             'month' => $validated['month'],
             'year' => $validated['year'],
         ]);
 
         $pdf->setPaper('a4', 'landscape');
 
-        $monthName = Carbon::createFromDate($validated['year'], $validated['month'])->format('F_Y');
         $filename = 'Laporan_Bulanan_' . $monthName . '.pdf';
 
         return $pdf->download($filename);
@@ -193,7 +194,7 @@ class ReportController extends Controller
 
         $filename = 'Export_Narapidana_' . now()->format('Y-m-d_His') . '.xlsx';
 
-        return Excel::download(new \App\Exports\InmateExport($inmates), $filename);
+        return Excel::download(new InmateExport($inmates), $filename);
     }
 
     /**
@@ -205,7 +206,7 @@ class ReportController extends Controller
         $daysInMonth = $assessment->tanggal_penilaian->daysInMonth;
 
         foreach ($variabels as $variabel) {
-            foreach ($variabel->aspects as $aspek) {
+            foreach ($variabel->aspect as $aspek) {
                 foreach ($aspek->observationItems as $item) {
                     $observations = $assessment->dailyObservations()
                         ->where('observation_item_id', $item->id)
@@ -213,7 +214,7 @@ class ReportController extends Controller
                         ->keyBy('hari');
 
                     $checkedCount = $observations->where('is_checked', true)->count();
-                    $frequency = $item->calculateFrequency($daysInMonth);
+                    $frequency = $item->frekuensi;
                     $percentage = $frequency > 0 ? round(($checkedCount / $frequency) * 100, 2) : 0;
 
                     $observationData[$item->id] = [

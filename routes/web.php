@@ -76,22 +76,27 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('assessments/create', [AssessmentController::class, 'create'])->name('assessments.create');
         Route::post('assessments', [AssessmentController::class, 'store'])->name('assessments.store');
         Route::get('/{assessment}/export-template', [AssessmentController::class, 'exportTemplate'])->name('assessments.export-template');
-    Route::post('/{assessment}/import', [AssessmentController::class, 'import'])->name('assessments.import');
+        Route::post('/{assessment}/import', [AssessmentController::class, 'import'])->name('assessments.import');
     });
     Route::middleware('permission:view-penilaian')->group(function () {
         Route::get('assessments', [AssessmentController::class, 'index'])->name('assessments.index');
         Route::get('assessments/{assessment}', [AssessmentController::class, 'show'])->name('assessments.show');
     });
+    // Route::middleware('permission:delete-penilaian')->group(function () {
+    //     Route::delete('assessments/{assessment}', [AssessmentController::class, 'destroy'])->name('assessments.destroy');
+    //     });
 
 
     Route::middleware('permission:edit-penilaian')->group(function () {
         Route::get('assessments/{assessment}/edit', [AssessmentController::class, 'edit'])->name('assessments.edit');
+        Route::delete('assessments/{assessment}', [AssessmentController::class, 'destroy'])->name('assessments.destroy');
         Route::put('assessments/{assessment}', [AssessmentController::class, 'update'])->name('assessments.update');
-        Route::post('assessments/{assessment}/observation',
+        Route::post(
+            'assessments/{assessment}/observation',
             [AssessmentController::class, 'updateObservation']
         )->name('assessments.update-observation');
         Route::get('/{assessment}/export-template', [AssessmentController::class, 'exportTemplate'])->name('assessments.export-template');
-    Route::post('/{assessment}/import', [AssessmentController::class, 'import'])->name('assessments.import');
+        Route::post('/{assessment}/import', [AssessmentController::class, 'import'])->name('assessments.import');
     });
 
     Route::middleware('permission:submit-penilaian')->post(
@@ -178,7 +183,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 });
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';
 
 // Route::get('/dashboard', function () {
 //     return view('dashboard');

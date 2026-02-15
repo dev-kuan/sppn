@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\FrequencyRule;
 use App\Models\ObservationItem;
 use App\Models\AssessmentAspect;
 use App\Models\AssessmentVariabel;
@@ -27,7 +26,6 @@ class SettingController extends Controller
             'aspects' => AssessmentAspect::count(),
             'observation_items' => ObservationItem::count(),
             'active_items' => ObservationItem::aktif()->count(),
-            'frequency_rules' => FrequencyRule::aktif()->count(),
         ];
 
         return view('settings.index', compact('stats'));
@@ -182,7 +180,7 @@ class SettingController extends Controller
     {
         // $this->authorize('manage-observation-items');
 
-        $query = ObservationItem::with(['variabel', 'aspect', 'frequencyRule']);
+        $query = ObservationItem::with(['variabel', 'aspect']);
 
         // Filter by variabel
         if ($request->has('variabel_id') && $request->variabel_id != '') {
@@ -203,9 +201,8 @@ class SettingController extends Controller
 
         $variabels = AssessmentVariabel::all();
         $aspects = AssessmentAspect::all();
-        $frequencyRules = FrequencyRule::all();
 
-        return view('settings.observation-items.index', compact('items', 'variabels', 'aspects', 'frequencyRules'));
+        return view('settings.observation-items.index', compact('items', 'variabels', 'aspects'));
     }
 
     public function storeObservationItem(Request $request)
@@ -218,8 +215,7 @@ class SettingController extends Controller
             'aspek_id' => 'required|exists:assessment_aspect,id',
             'nama_item' => 'required|string|max:255',
             'bobot' => 'required|numeric|min:0|max:10',
-            'frekuensi_bulan' => 'required|integer|min:0|max:31',
-            'frequency_rule_id' => 'nullable|exists:frequency_rules,id',
+            'jenis_frekuensi' => 'required|integer|min:0|max:31',
             'use_dynamic_frequency' => 'boolean',
             'is_conditional_weight' => 'boolean',
             'sort_order' => 'required|integer|min:0',
@@ -256,8 +252,7 @@ class SettingController extends Controller
             'aspek_id' => 'required|exists:assessment_aspect,id',
             'nama_item' => 'required|string|max:255',
             'bobot' => 'required|numeric|min:0|max:10',
-            'frekuensi_bulan' => 'required|integer|min:0|max:31',
-            'frequency_rule_id' => 'nullable|exists:frequency_rules,id',
+            'jenis_frekuensi' => 'required|integer|min:0|max:31',
             'use_dynamic_frequency' => 'boolean',
             'is_conditional_weight' => 'boolean',
             'sort_order' => 'required|integer|min:0',

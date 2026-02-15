@@ -37,9 +37,9 @@ class DatabaseSeeder extends Seeder
         $this->command->newLine();
 
         // 5. Frequency Rules
-        $this->command->info('Seeding Frequency Rules...');
-        $this->call(FrequencyRuleSeeder::class);
-        $this->command->newLine();
+        // $this->command->info('Seeding Frequency Rules...');
+        // $this->call(FrequencyRuleSeeder::class);
+        // $this->command->newLine();
 
         // 6. Observation Items
         $this->command->info('Seeding Observation Items...');
@@ -55,7 +55,7 @@ class DatabaseSeeder extends Seeder
     private function displayLoginInfo()
     {
         $this->command->info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-        $this->command->info('   DEFAULT LOGIN CREDENTIALS');
+        $this->command->warn('   DEFAULT LOGIN CREDENTIALS (local)');
         $this->command->info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
         $this->command->newLine();
 
@@ -70,7 +70,6 @@ class DatabaseSeeder extends Seeder
         $this->command->table(['Role', 'Email', 'Password'], $credentials);
 
         $this->command->newLine();
-        $this->command->warn('Please change these passwords in production!');
         $this->command->info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     }
 }

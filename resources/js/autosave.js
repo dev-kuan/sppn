@@ -200,73 +200,98 @@ class AutoSave {
     }
 }
 
-/**
- * Score Calculator
- * Real-time score calculation for assessment
- */
 class ScoreCalculator {
     constructor(observations, observationItems, daysInMonth) {
         this.observations = observations;
         this.observationItems = observationItems;
         this.daysInMonth = daysInMonth;
+
+        console.log('🧮 ScoreCalculator initialized');
+        console.log('Observations count:', observations.length);
+        console.log('Items count:', observationItems.length);
     }
 
     /**
      * Calculate scores for all variabels
      */
-    calculateAll() {
-        const variabels = this.groupByVariabel();
-        const scores = {
-            kepribadian: 0,
-            kemandirian: 0,
-            sikap: 0,
-            mental: 0,
-            total: 0
-        };
+calculateAll() {
+    const grouped = this.groupByVariabel();
+    console.log('📊 Grouped data:', grouped);
 
-        Object.keys(variabels).forEach(variabelId => {
-            const aspects = variabels[variabelId];
-            let variabelScore = 0;
+    const scores = {
+        kepribadian: 0,
+        kemandirian: 0,
+        sikap: 0,
+        mental: 0,
+        total: 0
+    };
 
-            Object.keys(aspects).forEach(aspekId => {
-                const items = aspects[aspekId];
+    Object.keys(grouped).forEach(variabelKey => {
+        const aspects = grouped[variabelKey];
+        const aspectCountVariabel = Object.keys(aspects).length; // ✅ Jumlah aspek dalam variabel
+        let variabelScoreTotal = 0;
 
-                items.forEach(item => {
-                    const checkedCount = this.getCheckedCount(item.id);
-                    const frequency = this.calculateFrequency(item);
+        console.log(`\n📌 ${variabelKey} - Total Aspek: ${aspectCountVariabel} aspek`);
 
-                    if (frequency > 0) {
-                        const itemScore = (checkedCount / frequency) * item.bobot;
-                        variabelScore += itemScore;
-                    }
-                });
+        Object.keys(aspects).forEach(aspekId => {
+            const items = aspects[aspekId];
+            const itemsCountAspect = items.length; // ✅ Jumlah item dalam aspek
+            let aspectScore = 0;
+
+            console.log(`\n  📂 Aspek ${aspekId} (${itemsCountAspect} items)`);
+
+            items.forEach(item => {
+                const checkedCount = this.getCheckedCount(item.id);
+                const frequency = item.frekuensi;
+
+                if (frequency > 0) {
+                    // ✅ Item Score = ((checked/frekuensi) * bobot) * (100/jumlah item dalam aspek)
+                    const itemScore = ((checkedCount / frequency) * item.bobot) * (100 / itemsCountAspect);
+                    aspectScore += itemScore; // ✅ Aspect Score = jumlah seluruh item score
+
+                    console.log(`    Item ${item.id}: (${checkedCount}/${frequency}) × ${item.bobot} × (100/${itemsCountAspect}) = ${itemScore.toFixed(2)}`);
+                }
             });
 
-            const variabelName = this.getVariabelName(variabelId);
-            if (scores.hasOwnProperty(variabelName)) {
-                scores[variabelName] = variabelScore;
-            }
+            variabelScoreTotal += aspectScore;
+            console.log(`  ✅ Aspek ${aspekId} Score: ${aspectScore.toFixed(2)}`);
         });
 
-        scores.total = scores.kepribadian + scores.kemandirian + scores.sikap + scores.mental;
+        // ✅ Variabel Score = jumlah seluruh aspect score / jumlah aspect
+        const variabelScore = variabelScoreTotal / aspectCountVariabel;
 
-        return scores;
-    }
+        if (scores.hasOwnProperty(variabelKey)) {
+            scores[variabelKey] = variabelScore;
+            console.log(`✅ ${variabelKey} Score: ${variabelScore.toFixed(2)} (Total: ${variabelScoreTotal.toFixed(2)} / ${aspectCountVariabel} aspek)`);
+        } else {
+            console.warn(`⚠️ Key '${variabelKey}' tidak ada di scores object`);
+        }
+    });
+
+    // ✅ Total Score = jumlah seluruh variabel score
+    scores.total = scores.kepribadian + scores.kemandirian + scores.sikap + scores.mental;
+
+    console.log('\n🎯 Final Scores:', scores);
+    return scores;
+}
 
     /**
-     * Group observation items by variabel and aspek
+     * Group observation items by variabel key (bukan nama)
      */
     groupByVariabel() {
         const grouped = {};
 
         this.observationItems.forEach(item => {
-            if (!grouped[item.variabel_id]) {
-                grouped[item.variabel_id] = {};
+            // ✅ Gunakan variabel_key, bukan variabel_nama
+            const variabelKey = item.variabel_key || item.variabel_nama;
+
+            if (!grouped[variabelKey]) {
+                grouped[variabelKey] = {};
             }
-            if (!grouped[item.variabel_id][item.aspek_id]) {
-                grouped[item.variabel_id][item.aspek_id] = [];
+            if (!grouped[variabelKey][item.aspek_id]) {
+                grouped[variabelKey][item.aspek_id] = [];
             }
-            grouped[item.variabel_id][item.aspek_id].push(item);
+            grouped[variabelKey][item.aspek_id].push(item);
         });
 
         return grouped;
@@ -279,34 +304,6 @@ class ScoreCalculator {
         return this.observations.filter(obs =>
             obs.observation_item_id === itemId && obs.is_checked
         ).length;
-    }
-
-    /**
-     * Calculate frequency for an item
-     */
-    calculateFrequency(item) {
-        if (item.use_dynamic_frequency && item.frequency_rule) {
-            const rule = item.frequency_rule.formula;
-            for (let i = 0; i < rule.length; i++) {
-                if (this.daysInMonth <= rule[i].max_days) {
-                    return rule[i].frequency;
-                }
-            }
-        }
-        return item.frekuensi_bulan;
-    }
-
-    /**
-     * Get variabel name from ID
-     */
-    getVariabelName(variabelId) {
-        const map = {
-            1: 'kepribadian',
-            2: 'kemandirian',
-            3: 'sikap',
-            4: 'mental'
-        };
-        return map[variabelId] || 'unknown';
     }
 
     /**
@@ -328,7 +325,6 @@ class ScoreCalculator {
         return 'Sangat Tidak Baik';
     }
 }
-
 /**
  * Toast Notification
  */

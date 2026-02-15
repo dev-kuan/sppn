@@ -2,11 +2,12 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
-use Spatie\Activitylog\Traits\LogsActivity;
+use App\Enums\JenisFrekuensi;
 use Spatie\Activitylog\LogOptions;
+use Illuminate\Database\Eloquent\Model;
+use Spatie\Activitylog\Traits\LogsActivity;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class ObservationItem extends Model
 {
@@ -20,8 +21,7 @@ class ObservationItem extends Model
         'bobot_item',
         'bobot',
         'is_conditional_weight',
-        'frekuensi_bulan',
-        'frequency_rule_id',
+        'jenis_frekuensi',
         'use_dynamic_frequency',
         'sort_order',
         'aktif',
@@ -33,7 +33,7 @@ class ObservationItem extends Model
         'bobot_item' => 'decimal:2',
         'bobot' => 'decimal:2',
         'is_conditional_weight' => 'boolean',
-        'frekuensi_bulan' => 'integer',
+        'jenis_frekuensi' => JenisFrekuensi::class,
         'sort_order' => 'integer',
         'aktif' => 'boolean',
         'use_dynamic_frequency' => 'boolean',
@@ -59,10 +59,10 @@ class ObservationItem extends Model
         return $this->belongsTo(AssessmentAspect::class, 'aspect_id');
     }
 
-    public function frequencyRule()
-    {
-        return $this->belongsTo(FrequencyRule::class);
-    }
+    // public function frequencyRule()
+    // {
+    //     return $this->belongsTo(FrequencyRule::class);
+    // }
 
     public function dailyObservations()
     {
@@ -92,39 +92,39 @@ class ObservationItem extends Model
 
     public function scopeWithRelations($query)
     {
-        return $query->with(['variabel', 'aspect', 'frequencyRule']);
+        return $query->with(['variabel', 'aspect']);
     }
 
-    protected function isMaxDaysFormula(array $formula): bool
-    {
-        return isset($formula[0]['max_days']);
-    }
 
-    protected function isFixedFormula(array $formula): bool
-    {
-        return isset($formula[0]['frequency']) && !isset($formula[0]['max_days']);
-    }
+    public function getFrekuensiAttribute()
+{
+    return \App\Domain\Frequency\FrequencyResolver::resolve(
+        $this,
+        now()
+    );
+}
+
 
     // Methods
-public function calculateFrequency($daysInMonth)
-{
-    // If using dynamic frequency with rules
-    if ($this->use_dynamic_frequency && $this->frequency_rule) {
-        $rules = is_string($this->frequency_rule)
-            ? json_decode($this->frequency_rule, true)
-            : $this->frequency_rule;
+// public function calculateFrequency($daysInMonth)
+// {
+//     // If using dynamic frequency with rules
+//     if ($this->use_dynamic_frequency && $this->frequency_rule) {
+//         $rules = is_string($this->frequency_rule)
+//             ? json_decode($this->frequency_rule, true)
+//             : $this->frequency_rule;
 
-        if (isset($rules['formula']) && is_array($rules['formula'])) {
-            foreach ($rules['formula'] as $rule) {
-                if ($daysInMonth <= ($rule['max_days'] ?? 31)) {
-                    return $rule['frequency'] ?? $this->frekuensi_bulan;
-                }
-            }
-        }
-    }
+//         if (isset($rules['formula']) && is_array($rules['formula'])) {
+//             foreach ($rules['formula'] as $rule) {
+//                 if ($daysInMonth <= ($rule['max_days'] ?? 31)) {
+//                     return $rule['frequency'] ?? $this->jenis_frekuensi;
+//                 }
+//             }
+//         }
+//     }
 
-    // Default: use static frequency
-    return $this->frekuensi_bulan ?? 0;
-}
+//     // Default: use static frequency
+//     return $this->jenis_frekuensi ?? 0;
+// }
 
 }

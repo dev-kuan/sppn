@@ -30,9 +30,6 @@ class ObservationItemSeeder extends Seeder
 
     private function seedPembinaanKepribadian($variabelId, &$sortOrder)
     {
-        $kesadaranBeragamaRule = FrequencyRule::where('nama_aturan', 'Membaca Kitab Suci')->first();
-        $kegiatanBerkalaRule = FrequencyRule::where('nama_aturan', 'Kegiatan Berkala')->first();
-        $kegiatanDiselenggarakanRule = FrequencyRule::where('nama_aturan', 'Kegiatan Diselenggarakan')->first();
         // Get Aspek IDs
         $kesadaranBeragama = AssessmentAspect::where('assessment_variabel_id', $variabelId)
             ->where('nama', 'Kesadaran Beragama')->first();
@@ -45,123 +42,130 @@ class ObservationItemSeeder extends Seeder
         $konselingRehab = AssessmentAspect::where('assessment_variabel_id', $variabelId)
             ->where('nama', 'Konseling & Rehabilitasi')->first();
 
+        // 'mingguan 1' => [
+        // ['max_days' => 7,  'frequency' => 4],
+        // ['max_days' => 14, 'frequency' => 3],
+        // ['max_days' => 21, 'frequency' => 2],
+        // ['max_days' => 31, 'frequency' => 1],
+        //         ],
+
+        // 'mingguan 2' => [
+        //             ['max_days' => 7,  'frequency' => 8],
+        //             ['max_days' => 14, 'frequency' => 6],
+        //             ['max_days' => 21, 'frequency' => 4],
+        //             ['max_days' => 31, 'frequency' => 2],
+        //         ],
+
+        // 'mingguan 3' => [
+        // ['max_days' => 7,  'frequency' => 20],
+        // ['max_days' => 14, 'frequency' => 15],
+        // ['max_days' => 21, 'frequency' => 10],
+        // ['max_days' => 31, 'frequency' => 2],
+        //         ],
+
         // 1. Kesadaran Beragama
-        ObservationItem::create([
-            'kode' => 'PK-KB-01',
+        $kesadaranBeragamaItems = [
+            ['kode' => "PK-KB-01", 'nama_item' => 'Membaca dan/atau belajar Kitab Suci', 'bobot' => 1.04, 'jenis_frekuensi' => 'Mingguan2',],
+            ['kode' => "PK-KB-02", 'nama_item' => 'Ibadah tepat waktu/rutin', 'bobot' => 1.08, 'jenis_frekuensi' => 'Harian',],
+            ['kode' => "PK-KB-03", 'nama_item' => 'Membaca dan/atau belajar Kitab Suci', 'bobot' => 0.87, 'jenis_frekuensi' => 'Mingguan1',],
+            ['kode' => "PK-KB-04", 'nama_item' => 'Melaksanakan ibadah di luar yang wajib', 'bobot' => 0.97, 'jenis_frekuensi' => 'Mingguan1',],
+            ['kode' => "PK-KB-05", 'nama_item' => 'Mengikuti ibadah secara berkelompok', 'bobot' => 1.03, 'jenis_frekuensi' => 'Fix',],
+        ];
+
+        foreach($kesadaranBeragamaItems as $item) {
+            ObservationItem::create([
+            'kode' => $item['kode'],
             'variabel_id' => $variabelId,
             'aspect_id' => $kesadaranBeragama->id,
-            'nama_item' => 'Membaca dan/atau belajar Kitab Suci',
-            'bobot' => 1.04,
-            'frequency_rule_id' => $kesadaranBeragamaRule->id,
+            'nama_item' => $item['nama_item'],
+            'bobot' => $item['bobot'],
             'use_dynamic_frequency' => true,
-            'frekuensi_bulan' => 8,
+            'jenis_frekuensi' => $item['jenis_frekuensi'],
             'sort_order' => $sortOrder++,
             'aktif' => true,
         ]);
+        }
+        // ObservationItem::create([
+        //     'kode' => 'PK-KB-01',
+        //     'variabel_id' => $variabelId,
+        //     'aspect_id' => $kesadaranBeragama->id,
+        //     'nama_item' => 'Membaca dan/atau belajar Kitab Suci',
+        //     'bobot' => 1.04,
+        //     'use_dynamic_frequency' => true,
+        //     'jenis_frekuensi' => 'Mingguan2',
+        //     'sort_order' => $sortOrder++,
+        //     'aktif' => true,
+        // ]);
 
-        ObservationItem::create([
-            'kode' => 'PK-KB-02',
-            'variabel_id' => $variabelId,
-            'aspect_id' => $kesadaranBeragama->id,
-            'nama_item' => 'Ibadah tepat waktu / rutin',
-            'bobot' => 1.08,
-            'frekuensi_bulan' => 31,
-            'sort_order' => $sortOrder++,
-            'aktif' => true,
-        ]);
+        // ObservationItem::create([
+        //     'kode' => 'PK-KB-02',
+        //     'variabel_id' => $variabelId,
+        //     'aspect_id' => $kesadaranBeragama->id,
+        //     'nama_item' => 'Ibadah tepat waktu / rutin',
+        //     'bobot' => 1.08,
+        //     'use_dynamic_frequency' => true,
+        //     'jenis_frekuensi' => 'Harian',
+        //     'sort_order' => $sortOrder++,
+        //     'aktif' => true,
+        // ]);
 
-        ObservationItem::create([
-            'kode' => 'PK-KB-03',
-            'variabel_id' => $variabelId,
-            'aspect_id' => $kesadaranBeragama->id,
-            'nama_item' => 'Melaksanakan ibadah di luar yang wajib',
-            'bobot' => 0.87,
-            'frequency_rule_id' => $kegiatanBerkalaRule->id,
-            'use_dynamic_frequency' => true,
-            'frekuensi_bulan' => 4,
-            'sort_order' => $sortOrder++,
-            'aktif' => true,
-        ]);
+        // ObservationItem::create([
+        //     'kode' => 'PK-KB-03',
+        //     'variabel_id' => $variabelId,
+        //     'aspect_id' => $kesadaranBeragama->id,
+        //     'nama_item' => 'Melaksanakan ibadah di luar yang wajib',
+        //     'bobot' => 0.87,
+        //     'use_dynamic_frequency' => true,
+        //     'jenis_frekuensi' => 'Mingguan1',
+        //     'sort_order' => $sortOrder++,
+        //     'aktif' => true,
+        // ]);
 
-        ObservationItem::create([
-            'kode' => 'PK-KB-04',
-            'variabel_id' => $variabelId,
-            'aspect_id' => $kesadaranBeragama->id,
-            'nama_item' => 'Mengikuti kegiatan ceramah/khotbah',
-            'bobot' => 0.97,
-            'frequency_rule_id' => $kegiatanBerkalaRule->id,
-            'use_dynamic_frequency' => true,
-            'frekuensi_bulan' => 4,
-            'sort_order' => $sortOrder++,
-            'aktif' => true,
-        ]);
+        // ObservationItem::create([
+        //     'kode' => 'PK-KB-04',
+        //     'variabel_id' => $variabelId,
+        //     'aspect_id' => $kesadaranBeragama->id,
+        //     'nama_item' => 'Mengikuti kegiatan ceramah/khotbah',
+        //     'bobot' => 0.97,
+        //     'use_dynamic_frequency' => true,
+        //     'jenis_frekuensi' => 'Mingguan1',
+        //     'sort_order' => $sortOrder++,
+        //     'aktif' => true,
+        // ]);
 
-        ObservationItem::create([
-            'kode' => 'PK-KB-05',
-            'variabel_id' => $variabelId,
-            'aspect_id' => $kesadaranBeragama->id,
-            'nama_item' => 'Mengikuti ibadah secara berkelompok',
-            'bobot' => 1.03,
-            'frekuensi_bulan' => 1,
-            'sort_order' => $sortOrder++,
-            'aktif' => true,
-        ]);
+        // ObservationItem::create([
+        //     'kode' => 'PK-KB-05',
+        //     'variabel_id' => $variabelId,
+        //     'aspect_id' => $kesadaranBeragama->id,
+        //     'nama_item' => 'Mengikuti ibadah secara berkelompok',
+        //     'bobot' => 1.03,
+        //     'jenis_frekuensi' => 'Fix',
+        //     'sort_order' => $sortOrder++,
+        //     'aktif' => true,
+        // ]);
 
         // 2. Kesadaran Hukum & Kebangsaan
-        ObservationItem::create([
-            'kode' => 'PK-KH-01',
-            'variabel_id' => $variabelId,
-            'aspect_id' => $kesadaranHukum->id,
-            'nama_item' => 'Mengikuti penyuluhan wawasan nusantara',
-            'bobot' => 1.08,
-            'frekuensi_bulan' => 1,
-            'sort_order' => $sortOrder++,
-            'aktif' => true,
-        ]);
+        $kesadaranHukumItems = [
+            ['kode' => "PK-KH-01", 'nama_item' => 'Mengikuti penyuluhan wawasan nusantara', 'bobot' => 1.04,],
+            ['kode' => "PK-KH-02", 'nama_item' => 'Mengikuti penyuluhan hukum dampak dan bahaya tindak pidana', 'bobot' => 1.08,],
+            ['kode' => "PK-KH-03", 'nama_item' => 'Memperoleh nilai evaluasi materi penyuluhan', 'bobot' => 0.87,],
+            ['kode' => "PK-KH-04", 'nama_item' => 'Mengikuti upacara', 'bobot' => 1.00,],
+            ['kode' => "PK-KH-05", 'nama_item' => 'Hormati bendera saat upacara', 'bobot' => 1.04,],
+        ];
 
-        ObservationItem::create([
-            'kode' => 'PK-KH-02',
+        foreach($kesadaranHukumItems as $item) {
+          ObservationItem::create([
+            'kode' => $item['kode'],
             'variabel_id' => $variabelId,
             'aspect_id' => $kesadaranHukum->id,
-            'nama_item' => 'Mengikuti penyuluhan hukum dampak dan bahaya tindak pidana',
-            'bobot' => 1.07,
-            'frekuensi_bulan' => 1,
+            'nama_item' => $item['nama_item'],
+            'bobot' => $item['bobot'],
+            'jenis_frekuensi' => 'Fix',
             'sort_order' => $sortOrder++,
             'aktif' => true,
         ]);
+        }
 
-        ObservationItem::create([
-            'kode' => 'PK-KH-03',
-            'variabel_id' => $variabelId,
-            'aspect_id' => $kesadaranHukum->id,
-            'nama_item' => 'Memperoleh nilai evaluasi materi penyuluhan',
-            'bobot' => 0.92,
-            'frekuensi_bulan' => 1,
-            'sort_order' => $sortOrder++,
-            'aktif' => true,
-        ]);
-
-        ObservationItem::create([
-            'kode' => 'PK-KH-04',
-            'variabel_id' => $variabelId,
-            'aspect_id' => $kesadaranHukum->id,
-            'nama_item' => 'Mengikuti upacara',
-            'bobot' => 1.00,
-            'frekuensi_bulan' => 1,
-            'sort_order' => $sortOrder++,
-            'aktif' => true,
-        ]);
-
-        ObservationItem::create([
-            'kode' => 'PK-KH-05',
-            'variabel_id' => $variabelId,
-            'aspect_id' => $kesadaranHukum->id,
-            'nama_item' => 'Hormati bendera saat upacara',
-            'bobot' => 1.04,
-            'frekuensi_bulan' => 1,
-            'sort_order' => $sortOrder++,
-            'aktif' => true,
-        ]);
 
         ObservationItem::create([
             'kode' => 'PK-KH-06',
@@ -170,9 +174,8 @@ class ObservationItemSeeder extends Seeder
             'nama_item' => 'Mengisi lembar self-assessment',
             'bobot' => 0.00,
             'is_conditional_weight' => true,
-            'frequency_rule_id' => $kegiatanDiselenggarakanRule->id,
             'use_dynamic_frequency' => true,
-            'frekuensi_bulan' => 0,
+            'jenis_frekuensi' => 'Kondisional',
             'sort_order' => $sortOrder++,
             'aktif' => true,
         ]);
@@ -184,12 +187,66 @@ class ObservationItemSeeder extends Seeder
             'nama_item' => 'Mengikuti pramuka',
             'bobot' => 0.00,
             'is_conditional_weight' => true,
-            'frequency_rule_id' => $kegiatanDiselenggarakanRule->id,
             'use_dynamic_frequency' => true,
-            'frekuensi_bulan' => 0,
+            'jenis_frekuensi' => 'Kondisional',
             'sort_order' => $sortOrder++,
             'aktif' => true,
         ]);
+        // ObservationItem::create([
+        //     'kode' => 'PK-KH-01',
+        //     'variabel_id' => $variabelId,
+        //     'aspect_id' => $kesadaranHukum->id,
+        //     'nama_item' => 'Mengikuti penyuluhan wawasan nusantara',
+        //     'bobot' => 1.08,
+        //     'jenis_frekuensi' => 'Fix',
+        //     'sort_order' => $sortOrder++,
+        //     'aktif' => true,
+        // ]);
+
+        // ObservationItem::create([
+        //     'kode' => 'PK-KH-02',
+        //     'variabel_id' => $variabelId,
+        //     'aspect_id' => $kesadaranHukum->id,
+        //     'nama_item' => 'Mengikuti penyuluhan hukum dampak dan bahaya tindak pidana',
+        //     'bobot' => 1.07,
+        //     'jenis_frekuensi' => 'Fix',
+        //     'sort_order' => $sortOrder++,
+        //     'aktif' => true,
+        // ]);
+
+        // ObservationItem::create([
+        //     'kode' => 'PK-KH-03',
+        //     'variabel_id' => $variabelId,
+        //     'aspect_id' => $kesadaranHukum->id,
+        //     'nama_item' => 'Memperoleh nilai evaluasi materi penyuluhan',
+        //     'bobot' => 0.92,
+        //     'jenis_frekuensi' => 'Fix',
+        //     'sort_order' => $sortOrder++,
+        //     'aktif' => true,
+        // ]);
+
+        // ObservationItem::create([
+        //     'kode' => 'PK-KH-04',
+        //     'variabel_id' => $variabelId,
+        //     'aspect_id' => $kesadaranHukum->id,
+        //     'nama_item' => 'Mengikuti upacara',
+        //     'bobot' => 1.00,
+        //     'jenis_frekuensi' => 'Fix',
+        //     'sort_order' => $sortOrder++,
+        //     'aktif' => true,
+        // ]);
+
+        // ObservationItem::create([
+        //     'kode' => 'PK-KH-05',
+        //     'variabel_id' => $variabelId,
+        //     'aspect_id' => $kesadaranHukum->id,
+        //     'nama_item' => 'Hormati bendera saat upacara',
+        //     'bobot' => 1.04,
+        //     'jenis_frekuensi' => 'Fix',
+        //     'sort_order' => $sortOrder++,
+        //     'aktif' => true,
+        // ]);
+
 
         // 3. Kemampuan Intelektual
         ObservationItem::create([
@@ -198,7 +255,7 @@ class ObservationItemSeeder extends Seeder
             'aspect_id' => $kemampuanIntelektual->id,
             'nama_item' => 'Membaca buku di perpustakaan',
             'bobot' => 1.01,
-            'frekuensi_bulan' => 1,
+            'jenis_frekuensi' => 'Fix',
             'sort_order' => $sortOrder++,
             'aktif' => true,
         ]);
@@ -209,9 +266,8 @@ class ObservationItemSeeder extends Seeder
             'aspect_id' => $kemampuanIntelektual->id,
             'nama_item' => 'Mengikuti pendidikan Paket A/B/C',
             'bobot' => 0.00,
-            'frekuensi_bulan' => 1,
             'is_conditional_weight' => true,
-            'frequency_rule_id' => $kegiatanDiselenggarakanRule->id,
+            'jenis_frekuensi' => 'Kondisional',
             'use_dynamic_frequency' => true,
             'sort_order' => $sortOrder++,
             'aktif' => true,
@@ -223,7 +279,7 @@ class ObservationItemSeeder extends Seeder
             'aspect_id' => $kemampuanIntelektual->id,
             'nama_item' => 'Mengikuti materi CMT & LST',
             'bobot' => 1.01,
-            'frekuensi_bulan' => 1,
+            'jenis_frekuensi' => 'Fix',
             'sort_order' => $sortOrder++,
             'aktif' => true,
         ]);
@@ -235,7 +291,8 @@ class ObservationItemSeeder extends Seeder
             'aspect_id' => $kesehatanJasmani->id,
             'nama_item' => 'Mengikuti kegiatan rekreasi',
             'bobot' => 0.95,
-            'frekuensi_bulan' => 31,
+            'use_dynamic_frequency' => true,
+            'jenis_frekuensi' => 'Harian',
             'sort_order' => $sortOrder++,
             'aktif' => true,
         ]);
@@ -246,9 +303,8 @@ class ObservationItemSeeder extends Seeder
             'aspect_id' => $kesehatanJasmani->id,
             'nama_item' => 'Mengikuti olahraga luar ruangan (komunal)',
             'bobot' => 1.06,
-            'frequency_rule_id' => $kegiatanBerkalaRule->id,
+            'jenis_frekuensi' => 'Mingguan1',
             'use_dynamic_frequency' => true,
-            'frekuensi_bulan' => 4,
             'sort_order' => $sortOrder++,
             'aktif' => true,
         ]);
@@ -259,62 +315,78 @@ class ObservationItemSeeder extends Seeder
             'aspect_id' => $kesehatanJasmani->id,
             'nama_item' => 'Mengikuti kegiatan kesenian',
             'bobot' => 0.99,
-            'frequency_rule_id' => $kegiatanBerkalaRule->id,
+            'jenis_frekuensi' => 'Mingguan1',
             'use_dynamic_frequency' => true,
-            'frekuensi_bulan' => 4,
             'sort_order' => $sortOrder++,
             'aktif' => true,
         ]);
-
         // 5. Konseling & Rehabilitasi
-        ObservationItem::create([
-            'kode' => 'PK-KR-01',
-            'variabel_id' => $variabelId,
-            'aspect_id' => $konselingRehab->id,
-            'nama_item' => 'Mengikuti konseling psikologi',
-            'bobot' => 0.00,
-            'frekuensi_bulan' => 0,
-            'is_conditional_weight' => true,
-            'frequency_rule_id' => $kegiatanDiselenggarakanRule->id,
-            'use_dynamic_frequency' => true,
-            'sort_order' => $sortOrder++,
-            'aktif' => true,
-        ]);
+        $konselingItems = [
+            ['kode' => "PK-KR-01", 'nama_item' => 'Mengikuti konseling psikologi'],
+            ['kode' => "PK-KR-02", 'nama_item' => 'Mengikuti rehabilitasi sosial'],
+            ['kode' => "PK-KR-03", 'nama_item' => 'Mengikuti rehabilitasi medis'],
+        ];
 
-        ObservationItem::create([
-            'kode' => 'PK-KR-02',
-            'variabel_id' => $variabelId,
-            'aspect_id' => $konselingRehab->id,
-            'nama_item' => 'Mengikuti rehabilitasi sosial',
-            'bobot' => 0.00,
-            'frekuensi_bulan' => 0,
-            'is_conditional_weight' => true,
-            'frequency_rule_id' => $kegiatanDiselenggarakanRule->id,
-            'use_dynamic_frequency' => true,
-            'sort_order' => $sortOrder++,
-            'aktif' => true,
-        ]);
+        foreach ($konselingItems as $item) {
+            ObservationItem::create([
+                'kode' => $item['kode'],
+                'variabel_id' => $variabelId,
+                'aspect_id' => $konselingRehab->id,
+                'nama_item' => $item['nama_item'],
+                'bobot' => 0.00,
+                'is_conditional_weight' => true,
+                'jenis_frekuensi' => 'Kondisional',
+                'use_dynamic_frequency' => true,
+                'sort_order' => $sortOrder++,
+                'aktif' => true,
+            ]);
+        }
 
-        ObservationItem::create([
-            'kode' => 'PK-KR-03',
-            'variabel_id' => $variabelId,
-            'aspect_id' => $konselingRehab->id,
-            'nama_item' => 'Mengikuti rehabilitasi medis',
-            'bobot' => 0.00,
-            'frekuensi_bulan' => 0,
-            'is_conditional_weight' => true,
-            'frequency_rule_id' => $kegiatanDiselenggarakanRule->id,
-            'use_dynamic_frequency' => true,
-            'sort_order' => $sortOrder++,
-            'aktif' => true,
-        ]);
+
+        // ObservationItem::create([
+        //     'kode' => 'PK-KR-01',
+        //     'variabel_id' => $variabelId,
+        //     'aspect_id' => $konselingRehab->id,
+        //     'nama_item' => 'Mengikuti konseling psikologi',
+        //     'bobot' => 0.00,
+        //     'is_conditional_weight' => true,
+        //     'jenis_frekuensi' => 'Kondisional',
+        //     'use_dynamic_frequency' => true,
+        //     'sort_order' => $sortOrder++,
+        //     'aktif' => true,
+        // ]);
+
+        // ObservationItem::create([
+        //     'kode' => 'PK-KR-02',
+        //     'variabel_id' => $variabelId,
+        //     'aspect_id' => $konselingRehab->id,
+        //     'nama_item' => 'Mengikuti rehabilitasi sosial',
+        //     'bobot' => 0.00,
+        //     'is_conditional_weight' => true,
+        //     'jenis_frekuensi' => 'Kondisional',
+        //     'use_dynamic_frequency' => true,
+        //     'sort_order' => $sortOrder++,
+        //     'aktif' => true,
+        // ]);
+
+        // ObservationItem::create([
+        //     'kode' => 'PK-KR-03',
+        //     'variabel_id' => $variabelId,
+        //     'aspect_id' => $konselingRehab->id,
+        //     'nama_item' => 'Mengikuti rehabilitasi medis',
+        //     'bobot' => 0.00,
+        //     'is_conditional_weight' => true,
+        //     'jenis_frekuensi' => 'Kondisional',
+        //     'use_dynamic_frequency' => true,
+        //     'sort_order' => $sortOrder++,
+        //     'aktif' => true,
+        // ]);
 
         $this->command->info('Observation Items - Pembinaan Kepribadian seeded!');
     }
 
     private function seedPembinaanKemandirian($variabelId, &$sortOrder)
     {
-        $pelatihanRule = FrequencyRule::where('nama_aturan', 'Pelatihan dan Produksi')->first();
 
         // Get Aspek IDs
         $pelatihanKeterampilan = AssessmentAspect::where('assessment_variabel_id', $variabelId)
@@ -324,7 +396,7 @@ class ObservationItemSeeder extends Seeder
 
         // 1. Pelatihan Keterampilan
         $pelatihanItems = [
-            ['kode' => 'PM-PK-01', 'nama' => 'Hadir tepat waktu', 'bobot' => 1.03],
+            ['kode' => 'PM-PK-01', 'nama' => 'Hadir tepat waktu', 'bobot' => 1.03,],
             ['kode' => 'PM-PK-02', 'nama' => 'Mengikuti seluruh kegiatan pelatihan', 'bobot' => 1.04],
             ['kode' => 'PM-PK-03', 'nama' => 'Mematuhi peraturan sesuai prosedur kegiatan', 'bobot' => 1.04],
             ['kode' => 'PM-PK-04', 'nama' => 'Mematuhi peraturan dalam hubungan kerja', 'bobot' => 1.05],
@@ -338,9 +410,8 @@ class ObservationItemSeeder extends Seeder
                 'aspect_id' => $pelatihanKeterampilan->id,
                 'nama_item' => $item['nama'],
                 'bobot' => $item['bobot'],
-                'frequency_rule_id' => $pelatihanRule->id,
+                'jenis_frekuensi' => 'Mingguan3',
                 'use_dynamic_frequency' => true,
-                'frekuensi_bulan' => 20,
                 'sort_order' => $sortOrder++,
                 'aktif' => true,
             ]);
@@ -352,7 +423,7 @@ class ObservationItemSeeder extends Seeder
             'aspect_id' => $pelatihanKeterampilan->id,
             'nama_item' => 'Mendapatkan skor post test pengetahuan minimal 60',
             'bobot' => 0.93,
-            'frekuensi_bulan' => 1,
+            'jenis_frekuensi' => 'Fix',
             'sort_order' => $sortOrder++,
             'aktif' => true,
         ]);
@@ -362,7 +433,7 @@ class ObservationItemSeeder extends Seeder
             'aspect_id' => $pelatihanKeterampilan->id,
             'nama_item' => 'Mendapatkan skor tes keterampilan minimal 60',
             'bobot' => 0.92,
-            'frekuensi_bulan' => 1,
+            'jenis_frekuensi' => 'Fix',
             'sort_order' => $sortOrder++,
             'aktif' => true,
         ]);
@@ -384,9 +455,7 @@ class ObservationItemSeeder extends Seeder
                 'aspect_id' => $produksiBarang->id,
                 'nama_item' => $item['nama'],
                 'bobot' => $item['bobot'],
-                // 'frequency_rule_id' => $pelatihanRule->id,
-                // 'use_dynamic_frequency' => true,
-                'frekuensi_bulan' => 20,
+                'jenis_frekuensi' => 'Mingguan3',
                 'sort_order' => $sortOrder++,
                 'aktif' => true,
             ]);
@@ -398,8 +467,6 @@ class ObservationItemSeeder extends Seeder
 
     private function seedSikapNarapidana($variabelId, &$sortOrder)
     {
-        $kegiatanBerkalaRule = FrequencyRule::where('nama_aturan', 'Kegiatan Berkala')->first();
-        $kegiatanDiselenggarakanRule = FrequencyRule::where('nama_aturan', 'Kegiatan Diselenggarakan')->first();
         // Get Aspek IDs
         $keberfungsian = AssessmentAspect::where('assessment_variabel_id', $variabelId)
             ->where('nama', 'Keberfungsian & Rutinitas')->first();
@@ -433,7 +500,7 @@ class ObservationItemSeeder extends Seeder
                 'aspect_id' => $keberfungsian->id,
                 'nama_item' => $item['nama'],
                 'bobot' => $item['bobot'],
-                'frekuensi_bulan' => 31,
+                'jenis_frekuensi' => 'Harian',
                 'sort_order' => $sortOrder++,
                 'aktif' => true,
             ]);
@@ -445,9 +512,8 @@ class ObservationItemSeeder extends Seeder
             'aspect_id' => $keberfungsian->id,
             'nama_item' => 'Ikut kerja bakti',
             'bobot' => 1.06,
-            'frequency_rule_id' => $kegiatanBerkalaRule->id,
             'use_dynamic_frequency' => true,
-            'frekuensi_bulan' => $kegiatanBerkalaRule->id,
+            'jenis_frekuensi' => 'Mingguan1',
             'sort_order' => $sortOrder++,
             'aktif' => true,
         ]);
@@ -457,7 +523,7 @@ class ObservationItemSeeder extends Seeder
             'aspect_id' => $keberfungsian->id,
             'nama_item' => 'Menerima kunjungan keluarga',
             'bobot' => 1.06,
-            'frekuensi_bulan' => 1,
+            'jenis_frekuensi' => 'Fix',
             'sort_order' => $sortOrder++,
             'aktif' => true,
         ]);
@@ -467,7 +533,7 @@ class ObservationItemSeeder extends Seeder
             'aspect_id' => $keberfungsian->id,
             'nama_item' => 'Menerima kunjungan dinas',
             'bobot' => 1.01,
-            'frekuensi_bulan' => 1,
+            'jenis_frekuensi' => 'Fix',
             'sort_order' => $sortOrder++,
             'aktif' => true,
         ]);
@@ -476,11 +542,10 @@ class ObservationItemSeeder extends Seeder
             'variabel_id' => $variabelId,
             'aspect_id' => $keberfungsian->id,
             'nama_item' => 'Mau merapikan rambut, janggut, dan kuku',
-            'bobot' => 1.00,
+            'bobot' => 0.00,
             'is_conditional_weight' => true,
-            'frequency_rule_id' => $kegiatanDiselenggarakanRule->id,
             'use_dynamic_frequency' => true,
-            'frekuensi_bulan' => 1,
+            'jenis_frekuensi' => 'Kondisional',
             'sort_order' => $sortOrder++,
             'aktif' => true,
         ]);
@@ -503,7 +568,7 @@ class ObservationItemSeeder extends Seeder
                 'aspect_id' => $agresi->id,
                 'nama_item' => $item['nama'],
                 'bobot' => $item['bobot'],
-                'frekuensi_bulan' => 31,
+                'jenis_frekuensi' => 'Harian',
                 'sort_order' => $sortOrder++,
                 'aktif' => true,
             ]);
@@ -525,7 +590,7 @@ class ObservationItemSeeder extends Seeder
                 'nama_item' => $item['nama'],
                 'bobot' => 0.00,
                 'is_conditional_weight' => true,
-                'frekuensi_bulan' => 31,
+                'jenis_frekuensi' => 'Harian',
                 'sort_order' => $sortOrder++,
                 'aktif' => true,
             ]);
@@ -545,7 +610,7 @@ class ObservationItemSeeder extends Seeder
                 'aspect_id' => $mempengaruhi->id,
                 'nama_item' => $item['nama'],
                 'bobot' => $item['bobot'],
-                'frekuensi_bulan' => 31,
+                'jenis_frekuensi' => 'Harian',
                 'sort_order' => $sortOrder++,
                 'aktif' => true,
             ]);
@@ -567,7 +632,7 @@ class ObservationItemSeeder extends Seeder
                 'aspect_id' => $ekspresi->id,
                 'nama_item' => $item['nama'],
                 'bobot' => $item['bobot'],
-                'frekuensi_bulan' => 31,
+                'jenis_frekuensi' => 'Harian',
                 'sort_order' => $sortOrder++,
                 'aktif' => true,
             ]);
@@ -609,7 +674,7 @@ class ObservationItemSeeder extends Seeder
                 'aspect_id' => $depresi->id,
                 'nama_item' => $item['nama'],
                 'bobot' => $item['bobot'],
-                'frekuensi_bulan' => 31,
+                'jenis_frekuensi' => 'Harian',
                 'sort_order' => $sortOrder++,
                 'aktif' => true,
             ]);
@@ -629,46 +694,39 @@ class ObservationItemSeeder extends Seeder
                 'aspect_id' => $kecemasan->id,
                 'nama_item' => $item['nama'],
                 'bobot' => $item['bobot'],
-                'frekuensi_bulan' => 31,
+                'jenis_frekuensi' => 'Harian',
                 'sort_order' => $sortOrder++,
                 'aktif' => true,
             ]);
         }
 
         // 3. Psikosomatis & Malingering
-        $psikosomatisItems = [
-            ['kode' => 'KM-PS-01', 'nama' => 'Mengalami gejala fisik pada saat situasi di bawah tekanan', 'bobot' => 1.00]
-        ];
+        ObservationItem::create([
+            'kode' => 'KM-PS-01',
+            'variabel_id' => $variabelId,
+            'aspect_id' => $psikosomatis->id,
+            'nama_item' => 'Mengalami gejala fisik pada saat situasi di bawah tekanan',
+            'bobot' => 1.00,
+            'is_conditional_weight' => true,
+            'use_dynamic_frequency' => true,
+            'jenis_frekuensi' => 'Harian',
+            'sort_order' => $sortOrder++,
+            'aktif' => true,
+        ]);
 
-        foreach ($psikosomatisItems as $item) {
-            ObservationItem::create([
-                'kode' => $item['kode'],
-                'variabel_id' => $variabelId,
-                'aspect_id' => $psikosomatis->id,
-                'nama_item' => $item['nama'],
-                'bobot' => $item['bobot'],
-                'frekuensi_bulan' => 31,
-                'sort_order' => $sortOrder++,
-                'aktif' => true,
-            ]);
-        }
 
-        $malingeringItems = [
-            ['kode' => 'KM-MG-01', 'nama' => 'Mengeluhkan sesuatu secara terus-menerus untuk kepentingan diri sendiri untuk menghindari kewajiban', 'bobot' => 1.00]
-        ];
-
-        foreach ($malingeringItems as $item) {
-            ObservationItem::create([
-                'kode' => $item['kode'],
-                'variabel_id' => $variabelId,
-                'aspect_id' => $malingering->id,
-                'nama_item' => $item['nama'],
-                'bobot' => $item['bobot'],
-                'frekuensi_bulan' => 31,
-                'sort_order' => $sortOrder++,
-                'aktif' => true,
-            ]);
-        }
+        ObservationItem::create([
+            'kode' => 'KM-MG-01',
+            'variabel_id' => $variabelId,
+            'aspect_id' => $malingering->id,
+            'nama_item' => 'Mengeluhkan sesuatu secara terus-menerus untuk kepentingan diri sendiri untuk menghindari kewajiban',
+            'bobot' => 1.00,
+            'is_conditional_weight' => true,
+            'use_dynamic_frequency' => true,
+            'jenis_frekuensi' => 'Harian',
+            'sort_order' => $sortOrder++,
+            'aktif' => true,
+        ]);
 
         // 4. Potensi Bunuh Diri
         $bunuhDiriItems = [
@@ -685,7 +743,7 @@ class ObservationItemSeeder extends Seeder
                 'aspect_id' => $bunuhDiri->id,
                 'nama_item' => $item['nama'],
                 'bobot' => $item['bobot'],
-                'frekuensi_bulan' => 31,
+                'jenis_frekuensi' => 'Harian',
                 'sort_order' => $sortOrder++,
                 'aktif' => true,
             ]);

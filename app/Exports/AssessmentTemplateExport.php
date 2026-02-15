@@ -47,7 +47,7 @@ class AssessmentTemplateExport implements FromArray, WithStyles, WithColumnWidth
         // Row 3-6: Info Narapidana
         $data[] = ['No. Registrasi', $this->assessment->inmate->no_registrasi];
         $data[] = ['Nama Narapidana', $this->assessment->inmate->nama];
-        $data[] = ['Periode Penilaian', $this->assessment->tanggal_penilaian->format('F Y')];
+        $data[] = ['Periode Penilaian', $this->assessment->tanggal_penilaian->format('d F Y')];
         $data[] = ['Jumlah Hari', $this->daysInMonth . ' hari'];
 
         // Row 7: Empty
@@ -71,7 +71,7 @@ class AssessmentTemplateExport implements FromArray, WithStyles, WithColumnWidth
                         $aspek->nama,
                         $item->nama_item,
                         $item->bobot,
-                        $item->calculateFrequency($this->daysInMonth)
+                        $item->frekuensi
                     ];
 
                     // Add empty cells for each day

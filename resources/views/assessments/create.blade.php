@@ -43,18 +43,18 @@
             <!-- Assessment Period -->
             <div>
                 <label for="tanggal_penilaian" class="block text-sm font-medium text-gray-700">
-                    Periode Penilaian <span class="text-red-500">*</span>
+                    Tanggal Penilaian <span class="text-red-500">*</span>
                 </label>
-                <input type="month"
+                <input type="date"
                        name="tanggal_penilaian"
                        id="tanggal_penilaian"
-                       value="{{ old('tanggal_penilaian', now()->format('Y-m')) }}"
+                       value="{{ old('tanggal_penilaian', now()->format('d-m-Y')) }}"
                        required
                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm @error('tanggal_penilaian') border-red-500 @enderror">
                 @error('tanggal_penilaian')
                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                 @enderror
-                <p class="mt-1 text-xs text-gray-500">Pilih bulan dan tahun periode penilaian</p>
+                <p class="mt-1 text-xs text-gray-500">Pilih waktu penilaian</p>
             </div>
 
             <!-- Info Box -->

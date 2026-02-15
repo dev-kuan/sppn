@@ -181,7 +181,7 @@
                         </div>
                         <div class="mt-2 text-xs text-gray-500">
                             Terpenuhi: {{ $observationData[$item->id]->where('is_checked', true)->count() }} /
-                            {{ $item->calculateFrequency($daysInMonth) }} hari
+                            {{ $item->frekuensi }} hari
                         </div>
                     </div>
                     @endforeach

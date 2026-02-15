@@ -33,9 +33,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('inmate_id')->constrained('inmates')->cascadeOnDelete();
             $table->date('tanggal_penilaian');
-            $table->integer('bulan');
-            $table->integer('tahun');
-            $table->unique(['inmate_id', 'bulan', 'tahun']);
+            $table->unique(['inmate_id', 'tanggal_penilaian']);
             $table->decimal('skor_kepribadian', 10, 4)->nullable();
             $table->decimal('skor_kemandirian', 10, 4)->nullable();
             $table->decimal('skor_sikap', 10, 4)->nullable();

@@ -20,11 +20,7 @@ return new class extends Migration
             $table->decimal('bobot_item', 10, 2)->default(1);
             $table->decimal('bobot', 10, 2)->default(1.00);
             $table->boolean('is_conditional_weight')->default(false);
-            $table->integer('frekuensi_bulan');
-            $table->foreignId('frequency_rule_id')
-                ->nullable()
-                ->constrained('frequency_rules')
-                ->nullOnDelete();
+            $table->enum('jenis_frekuensi',['Harian', 'Mingguan1', 'Mingguan2', 'Mingguan3', 'Kondisional', 'Periodik', 'Fix']);
             $table->boolean('use_dynamic_frequency')->default(false);
             $table->integer('sort_order')->default(0);
             $table->boolean('aktif')->default(true);
