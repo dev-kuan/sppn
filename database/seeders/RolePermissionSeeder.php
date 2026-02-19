@@ -30,6 +30,7 @@ class RolePermissionSeeder extends Seeder
             'edit-penilaian',
             'submit-penilaian',
             'approve-penilaian',
+            'reject-penilaian',
 
             // Laporan
             'view-laporan',
@@ -87,6 +88,7 @@ class RolePermissionSeeder extends Seeder
             'edit-penilaian',
             'submit-penilaian',
             'approve-penilaian',
+            'reject-penilaian',
             'view-laporan',
             'export-laporan',
             'create-rekomendasi',
@@ -106,8 +108,6 @@ class RolePermissionSeeder extends Seeder
             'create-penilaian',
             'edit-penilaian',
             'view-laporan',
-            'view-settings',
-            'manage-observation-items',
         ]);
 
         $this->command->info('Roles and Permissions seeded successfully!');

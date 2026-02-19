@@ -25,7 +25,7 @@
                     @foreach($inmates as $inmate)
                         @foreach($inmate->assessments()->diterima()->get() as $assessment)
                         <option value="{{ $assessment->id }}">
-                            {{ $inmate->nama }} - {{ $assessment->tanggal_penilaian->format('F Y') }}
+                            {{ $inmate->nama }} - {{ $assessment->tanggal_penilaian->translatedFormat('F Y') }}
                         </option>
                         @endforeach
                     @endforeach
@@ -61,7 +61,7 @@
                             class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
                         @for($m = 1; $m <= 12; $m++)
                         <option value="{{ $m }}" {{ date('n') == $m ? 'selected' : '' }}>
-                            {{ \Carbon\Carbon::create()->month($m)->format('F') }}
+                            {{ \Carbon\Carbon::create()->month($m)->translatedFormat('F') }}
                         </option>
                         @endfor
                     </select>
@@ -164,7 +164,7 @@
                         <select name="month" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
                             <option value="">Semua Bulan</option>
                             @for($m = 1; $m <= 12; $m++)
-                            <option value="{{ $m }}">{{ \Carbon\Carbon::create()->month($m)->format('F') }}</option>
+                            <option value="{{ $m }}">{{ \Carbon\Carbon::create()->month($m)->translatedFormat('F') }}</option>
                             @endfor
                         </select>
 

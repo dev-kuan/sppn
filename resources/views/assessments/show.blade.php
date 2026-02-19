@@ -180,7 +180,8 @@
                             @endfor
                         </div>
                         <div class="mt-2 text-xs text-gray-500">
-                            Terpenuhi: {{ $observationData[$item->id]->where('is_checked', true)->count() }} /
+                            {{-- Terpenuhi: {{ $observationData[$item->id]->where('is_checked', true)->count() }} / --}}
+                            Terpenuhi: {{ $checkedObservations->count() }}/
                             {{ $item->frekuensi }} hari
                         </div>
                     </div>

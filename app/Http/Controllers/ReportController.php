@@ -54,7 +54,6 @@ class ReportController extends Controller
 
         $pdf = Pdf::loadView('reports.assessment-pdf', [
             'assessment' => $assessment,
-            'variabels' => $variabels,
             'observationData' => $observationData,
         ]);
 
@@ -200,35 +199,96 @@ class ReportController extends Controller
     /**
      * Get observation data for report
      */
-    private function getObservationData($assessment, $variabels)
-    {
-        $observationData = [];
-        $daysInMonth = $assessment->tanggal_penilaian->daysInMonth;
+private function getObservationData($assessment, $variabels)
+{
+    $observationData = [];
 
-        foreach ($variabels as $variabel) {
-            foreach ($variabel->aspect as $aspek) {
-                foreach ($aspek->observationItems as $item) {
-                    $observations = $assessment->dailyObservations()
-                        ->where('observation_item_id', $item->id)
-                        ->get()
-                        ->keyBy('hari');
+    foreach ($variabels as $variabel) {
+        $variabelData = [
+            'nama'          => $variabel->nama,
+            'aspects'       => [],
+            'skor_variabel' => null,
+        ];
 
-                    $checkedCount = $observations->where('is_checked', true)->count();
-                    $frequency = $item->frekuensi;
-                    $percentage = $frequency > 0 ? round(($checkedCount / $frequency) * 100, 2) : 0;
+        $skorVariabelMap = [
+            'kepribadian' => 'skor_kepribadian',
+            'kemandirian' => 'skor_kemandirian',
+            'sikap' => 'skor_sikap',
+            'mental' => 'skor_mental',
+        ];
+        $variabelData['skor_variabel'] = $assessment->assessmentScores
+            ->where('variabel_id', $variabel->id)
+            ->whereNull('aspect_id')
+            ->first()?->skor ?? '-';
 
-                    $observationData[$item->id] = [
-                        'observations' => $observations,
-                        'checked_count' => $checkedCount,
-                        'frequency' => $frequency,
-                        'percentage' => $percentage,
-                    ];
+        $totalSkorAspek    = 0;
+        $jumlahAspek       = count($variabel->aspect);
+
+        foreach ($variabel->aspect as $aspek) {
+            $jumlahItemDalamAspek = count($aspek->observationItems);
+            $totalItemScore       = 0;
+
+            $aspectData = [
+                'nama'       => $aspek->nama,
+                'items'      => [],
+                'skor_aspek' => 0,
+            ];
+
+            foreach ($aspek->observationItems as $item) {
+                $observations = $assessment->dailyObservations()
+                    ->where('observation_item_id', $item->id)
+                    ->get();
+
+                $checkedCount = $observations->where('is_checked', true)->count();
+                $frekuensi    = $item->frekuensi;
+                $bobot        = $item->bobot ?? 1; // sesuaikan nama kolom bobot
+
+                // Hitung item score
+                // itemScore = ((checklist / frekuensi) * bobot) * (100 / jumlah item dalam aspek)
+                $itemScore = 0;
+                if ($frekuensi > 0 && $jumlahItemDalamAspek > 0) {
+                    $itemScore = (($checkedCount / $frekuensi) * $bobot) * (100 / $jumlahItemDalamAspek);
                 }
+
+                $percentage = $frekuensi > 0
+                    ? round(($checkedCount / $frekuensi) * 100, 2)
+                    : 0;
+
+                $totalItemScore += $itemScore;
+
+                $aspectData['items'][] = [
+                    'nama_item'     => $item->nama_item,
+                    'frekuensi'     => $frekuensi,
+                    'bobot'         => $bobot,
+                    'checked_count' => $checkedCount,
+                    'percentage'    => $percentage,
+                    'item_score'    => round($itemScore, 2),
+                ];
             }
+
+            // aspectScore = jumlah semua item score dalam aspek
+            $aspectData['skor_aspek'] = round($totalItemScore, 2);
+            $totalSkorAspek += $totalItemScore;
+
+            $variabelData['aspects'][] = $aspectData;
         }
 
-        return $observationData;
+        // variabelScore = jumlah skor aspek / jumlah aspek
+        // (sudah tersimpan di assessment, tapi kita hitung juga sebagai pembanding)
+        // Ambil dari assessment scores jika ada, fallback ke perhitungan
+        $skorVariabelDB = $assessment->assessmentScores
+            ->where('variabel_id', $variabel->id)
+            ->whereNull('aspect_id')
+            ->first()?->skor;
+
+        $variabelData['skor_variabel'] = $skorVariabelDB
+            ?? ($jumlahAspek > 0 ? round($totalSkorAspek / $jumlahAspek, 2) : 0);
+
+        $observationData[] = $variabelData;
     }
+
+    return $observationData;
+}
 
     /**
      * Calculate monthly statistics

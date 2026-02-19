@@ -81,9 +81,9 @@ class AssessmentService {
 
     public function submitAssessment(Assessment $assessment) {
 
-        // only draft can be submited
-        if ($assessment->status !== 'draf') {
-            throw new \DomainException('Hanya penilaian dengan status draf yang dapat disubmit.');
+        // only draft/reject can be submited
+        if ($assessment->status !== 'draf' && $assessment->status !== 'ditolak') {
+            throw new \DomainException('Hanya penilaian dengan status draf/ditolak yang dapat disubmit.');
         }
 
         DB::transaction(function () use ($assessment) {

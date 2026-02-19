@@ -103,7 +103,7 @@ body {
 }
 
 /* TABLE */
-.observation { width:100%; border-collapse:collapse; }
+.observation { width:100%; border: 1px solid black; border-collapse:collapse; }
 
 .observation th {
     border:1px solid black;
@@ -115,15 +115,9 @@ body {
 
 .observation td {
     border:1px solid black;
-    padding:8px;
+    padding:6px;
 }
 
-/* SCORE BADGE */
-.score-badge {
-    border:1px solid black;
-    padding:2px 8px;
-    font-weight:bold;
-}
 
 /* BOX */
 .commitment-box,
@@ -203,7 +197,7 @@ DATA DEMOGRAFI NARAPIDANA
 <td class="label">Tempat & Tanggal Lahir</td>
 <td class="colon">:</td>
 <td class="value"> {{ $assessment->inmate->tempat_lahir ?? '-' }},
-                    {{ $assessment->inmate->tanggal_lahir?->format('d F Y') ?? '-' }}</td>
+                    {{ $assessment->inmate->tanggal_lahir?->translatedFormat('d F Y') ?? '-' }}</td>
 
 <td class="right-label">Lama Pidana (bulan)</td>
 <td class="colon">:</td>
@@ -267,66 +261,85 @@ DATA DEMOGRAFI NARAPIDANA
 <td>{{ $assessment->tanggal_penilaian->format('d') }}</td>
 
 <td colspan="2"><b>Bulan Pengisian</b></td>
-<td>{{ $assessment->tanggal_penilaian->format('F Y') }}</td>
+<td>{{ $assessment->tanggal_penilaian->translatedFormat('F Y') }} ({{ $assessment->tanggal_penilaian->daysInMonth }} hari)</td>
 </tr>
 
 </table>
 <!-- OBSERVASI -->
 <div class="section">
-<div class="section-title">Hasil Observasi</div>
- @foreach($variabels as $variabel)
-        <div style="margin-bottom: 25px;">
-            <h3 style="font-size: 12pt; color: #1e40af; margin-bottom: 10px;">
-                {{ $variabel->nama }}
-            </h3>
+    <div class="section-title">Hasil Observasi</div>
 
-            @foreach($variabel->aspect as $aspect)
-            <table class="observation">
-                <thead>
-                    <tr>
-                        <th style="width: 5%;">No</th>
-                        <th style="width: 40%;">Item Observasi</th>
-                        <th style="width: 12%;">Frekuensi</th>
-                        <th style="width: 12%;">Tercatat</th>
-                        <th style="width: 15%;">Persentase</th>
-                        <th style="width: 16%;">Jumlah Hari</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td colspan="6">
-                            {{ $aspect->nama }}
+    @foreach($observationData as $varIndex => $variabel)
+
+        @if($varIndex > 0)
+            <div style="page-break-before: always;"></div>
+        @endif
+
+        {{-- Nama Variabel --}}
+        <div style="font-weight: bold; font-size: 12pt; margin-bottom: 8px;">
+            {{ $variabel['nama'] }}
+        </div>
+
+        <table class="observation">
+            {{-- Header kolom — hanya sekali di atas tabel variabel ini --}}
+            <thead>
+                <tr>
+                    <th style="width:5%;">No</th>
+                    <th style="width:49%;">Item Observasi Narapidana</th>
+                    <th style="width:12%;">Frekuensi</th>
+                    <th style="width:12%;">Tercatat</th>
+                    <th style="width:12%;">Persentase</th>
+                    <th style="width:10%;">Skor</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @foreach($variabel['aspects'] as $aspekIndex => $aspek)
+
+                    {{-- Baris Nama Aspek (colspan penuh) --}}
+                    <tr style="background: #e6e6e6;">
+                        <td colspan="6" style="font-weight: bold; padding: 6px 8px;">
+                            {{ $aspekIndex + 1 }}. {{ $aspek['nama'] }}
                         </td>
                     </tr>
-                    @foreach($aspect->observationItems as $index => $item)
-                    @php
-                        $itemData = $observationData[$item->id] ?? [
-                            'checked_count' => 0,
-                            'frekuensi' => 1,
-                            'percentage' => 0
-                        ];
-                        $percentage = $itemData['percentage'];
-                    @endphp
+
+                    {{-- Baris item-item --}}
+                    @foreach($aspek['items'] as $itemIndex => $item)
                     <tr>
-                        <td style="text-align: center;">{{ $index + 1 }}</td>
-                        <td>{{ $item->nama_item }}</td>
-                        <td style="text-align: center;">{{ $itemData['frekuensi'] }}</td>
-                        <td style="text-align: center; ">{{ $itemData['checked_count'] }}</td>
-                        <td style="text-align: center;">
-                            <span>
-                                {{ number_format($percentage, 1) }}%
-                            </span>
-                        </td>
-                        <td style="text-align: center;">
-                            {{ $assessment->tanggal_penilaian->daysInMonth }} hari
-                        </td>
+                        <td style="text-align:center;">{{ $itemIndex + 1 }}</td>
+                        <td>{{ $item['nama_item'] }}</td>
+                        <td style="text-align:center;">{{ $item['frekuensi'] }}</td>
+                        <td style="text-align:center;">{{ $item['checked_count'] }}</td>
+                        <td style="text-align:center;">{{ number_format($item['percentage'], 1) }}%</td>
+                        <td style="text-align:center;">{{ number_format($item['item_score'], 1) }}</td>
                     </tr>
                     @endforeach
-                </tbody>
-            </table>
-            @endforeach
-        </div>
-        @endforeach
+
+                    {{-- Baris Skor Aspek --}}
+                    <tr>
+                        <td colspan="5" style="text-align:right; font-weight:bold; font-style:italic; padding-right: 10px;">
+                            Skor Aspek {{ $aspek['nama'] }}
+                        </td>
+                        <td style="text-align:center; font-weight:bold;">
+                            {{ $aspek['skor_aspek'] }}
+                        </td>
+                    </tr>
+
+                @endforeach
+
+                {{-- Baris Skor Variabel --}}
+                <tr style="background: #f2f2f2;">
+                    <td colspan="5" style="text-align:right; font-weight:bold; padding-right: 10px;">
+                        Skor Variabel {{ $variabel['nama'] }}
+                    </td>
+                    <td style="text-align:center; font-weight:bold;">
+                        {{ $variabel['skor_variabel'] }}
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+
+    @endforeach
 </div>
 
 <!-- Pernyataan Komitmen -->

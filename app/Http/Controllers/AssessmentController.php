@@ -56,10 +56,10 @@ class AssessmentController extends Controller
             $query->whereYear('tanggal_penilaian', $request->year);
         }
 
-        // created by petugas
-        if (auth()->user()->isPetugasInput()) {
-            $query->where('created_by', auth()->id());
-        }
+        // // created by petugas
+        // if (auth()->user()->isPetugasInput()) {
+        //     $query->where('created_by', auth()->id());
+        // }
 
         $assessments = $query->latest('tanggal_penilaian')
             ->paginate(15)
@@ -143,47 +143,16 @@ class AssessmentController extends Controller
         $observationData = [];
         $daysInMonth = $assessment->tanggal_penilaian->daysInMonth;
 
-        foreach ($variabels as $variabel) {
-            foreach ($variabel->aspect as $aspek) {
-                foreach ($aspek->observationItems as $item) {
-                    $observations = DailyObservation::where('assessment_id', $assessment->id)
-                        ->where('observation_item_id', $item->id)
-                        ->get()
-                        ->keyBy('hari');
 
-                    $observationData[$item->id] = $observations;
-                }
-            }
-        }
+        // ✅ Mapping nama variabel ke key yang pendek
+        $variabelMapping = [
+            'Pembinaan Kepribadian' => 'kepribadian',
+            'Pembinaan Kemandirian' => 'kemandirian',
+            'Penilaian Sikap' => 'sikap',
+            'Penilaian Kondisi Mental' => 'mental'
+        ];
 
-        return view('assessments.show', compact('assessment', 'variabels', 'observationData', 'daysInMonth'));
-    }
-public function edit(Assessment $assessment)
-{
-    // only draft & reject can be edited
-    if (!in_array($assessment->status, ['draf', 'ditolak'])) {
-        return redirect()->route('assessments.show', $assessment)
-            ->with('error', 'Penilaian yang sudah disubmit tidak dapat diedit.');
-    }
-
-    $assessment->load('inmate', 'dailyObservations');
-
-    // Get observation structure
-    $variabels = AssessmentVariabel::with(['aspect.observationItems' => function ($q) {
-        $q->aktif()->ordered();
-    }])->get();
-
-    $daysInMonth = $assessment->tanggal_penilaian->daysInMonth;
-
-    // ✅ Mapping nama variabel ke key yang pendek
-    $variabelMapping = [
-        'pembinaan kepribadian' => 'kepribadian',
-        'pembinaan kemandirian' => 'kemandirian',
-        'penilaian sikap' => 'sikap',
-        'penilaian kondisi mental' => 'mental'
-    ];
-
-    // Format data observationItems dengan struktur yang benar
+        // Format data observationItems dengan struktur yang benar
     $observationItemsArray = [];
 
     foreach ($variabels as $variabel) {
@@ -214,26 +183,107 @@ public function edit(Assessment $assessment)
 
     // Prepare checked observations untuk inisialisasi frontend
     $checkedObservations = $assessment->dailyObservations()
+        ->where('observation_item_id', $item->id)
         ->where('is_checked', true)
-        ->get()
-        ->map(function($obs) {
-            return [
-                'observation_item_id' => $obs->observation_item_id,
-                'hari' => $obs->hari,
-                'is_checked' => true
-            ];
-        })
-        ->toArray();
+        ->get();
 
-    return view('assessments.edit', compact(
-        'assessment',
-        'variabels',
-        'daysInMonth',
-        'observationItemsArray',
-        'observationData',
-        'checkedObservations'
-    ));
-}
+        // foreach ($variabels as $variabel) {
+        //     foreach ($variabel->aspect as $aspek) {
+        //         foreach ($aspek->observationItems as $item) {
+        //             $observations = DailyObservation::where('assessment_id', $assessment->id)
+        //                 ->where('observation_item_id', $item->id)
+        //                 ->get()
+        //                 ->keyBy('hari');
+
+        //             $observationData[$item->id] = $observations;
+        //         }
+        //     }
+        // }
+
+        return view('assessments.show', compact(
+            'assessment',
+            'variabels',
+            'observationData',
+            'daysInMonth',
+            'checkedObservations'
+            ));
+    }
+    public function edit(Assessment $assessment)
+    {
+        // only draft & reject can be edited
+        if (!in_array($assessment->status, ['draf', 'ditolak'])) {
+            return redirect()->route('assessments.show', $assessment)
+                ->with('error', 'Penilaian yang sudah disubmit tidak dapat diedit.');
+        }
+
+        $assessment->load('inmate', 'dailyObservations');
+
+        // Get observation structure
+        $variabels = AssessmentVariabel::with(['aspect.observationItems' => function ($q) {
+            $q->aktif()->ordered();
+        }])->get();
+
+        $daysInMonth = $assessment->tanggal_penilaian->daysInMonth;
+
+        // ✅ Mapping nama variabel ke key yang pendek
+        $variabelMapping = [
+            'Pembinaan Kepribadian' => 'kepribadian',
+            'Pembinaan Kemandirian' => 'kemandirian',
+            'Penilaian Sikap' => 'sikap',
+            'Penilaian Kondisi Mental' => 'mental'
+        ];
+
+        // Format data observationItems dengan struktur yang benar
+        $observationItemsArray = [];
+
+        foreach ($variabels as $variabel) {
+            $variabelNamaLower = strtolower($variabel->nama);
+            $variabelKey = $variabelMapping[$variabelNamaLower] ?? $variabelNamaLower;
+
+            foreach ($variabel->aspect as $aspek) {
+                foreach ($aspek->observationItems as $item) {
+                    $observationItemsArray[] = [
+                        'id' => $item->id,
+                        'bobot' => (float) $item->bobot,
+                        'frekuensi' => (int) $item->frekuensi,
+                        'variabel_id' => $variabel->id,
+                        'variabel_nama' => $variabelNamaLower,
+                        'variabel_key' => $variabelKey,
+                        'aspek_id' => $aspek->id,
+                        'aspek_nama' => $aspek->nama
+                    ];
+                }
+            }
+        }
+
+        // Prepare existing observations data
+        $observationData = [];
+        foreach ($assessment->dailyObservations as $obs) {
+            $observationData[$obs->observation_item_id][$obs->hari] = $obs;
+        }
+
+        // Prepare checked observations untuk inisialisasi frontend
+        $checkedObservations = $assessment->dailyObservations()
+            ->where('is_checked', true)
+            ->get()
+            ->map(function ($obs) {
+                return [
+                    'observation_item_id' => $obs->observation_item_id,
+                    'hari' => $obs->hari,
+                    'is_checked' => true
+                ];
+            })
+            ->toArray();
+
+        return view('assessments.edit', compact(
+            'assessment',
+            'variabels',
+            'daysInMonth',
+            'observationItemsArray',
+            'observationData',
+            'checkedObservations'
+        ));
+    }
     public function destroy(Assessment $assessment)
     {
         // $this->authorize('delete-narapidana');
@@ -322,7 +372,7 @@ public function edit(Assessment $assessment)
     {
         // $this->authorize('approve-penilaian');
         try {
-            $this->assessmentService->rejectAssessment($assessment, $request->validated);
+            $this->assessmentService->rejectAssessment($assessment, $request->validated());
 
             return redirect()
                 ->route('assessments.show', $assessment)

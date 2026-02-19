@@ -37,6 +37,7 @@
                         @include('layouts.partials.sidebar')
                     </div>
                 </div>
+                <div class="flex-1" @click="sidebarOpen = false"></div>
             </div>
         </div>
 

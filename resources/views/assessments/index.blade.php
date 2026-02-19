@@ -169,7 +169,7 @@
                         </div>
                     </td>
                     <td class="px-6 py-4 text-sm text-gray-900 whitespace-nowrap">
-                        {{ $assessment->tanggal_penilaian->format('D F Y') }}
+                        {{ $assessment->tanggal_penilaian->translatedFormat('d F Y') }}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
                         <div class="text-sm font-semibold text-gray-900">{{ number_format($assessment->skor_total ?? 0, 2) }}</div>
@@ -207,40 +207,26 @@
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                                     </svg>
                                 </a>
-                                <form action="{{ route('assessments.destroy', $inmate) }}"
-                                      method="POST"
-                                      class="inline"
-                                      onsubmit="return confirm('Apakah Anda yakin ingin menghapus penilaian ini?')">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit"
-                                            class="text-red-600 hover:text-red-900"
-                                            title="Hapus">
-                                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                        </svg>
-                                    </button>
-                                </form>
                                 @endcan
-                                {{-- @can('hapus-penilaian') --}}
-                            {{-- @endcan --}}
                             @endif
-                                @can('edit-penilaian')
-                                <form action="{{ route('assessments.destroy', $assessment) }}"
-                                      method="POST"
-                                      class="inline"
-                                      onsubmit="return confirm('Apakah Anda yakin ingin menghapus penilaian ini?')">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit"
-                                            class="text-red-600 hover:text-red-900"
-                                            title="Hapus">
-                                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                        </svg>
-                                    </button>
-                                </form>
-                                @endcan
+                            @if ($assessment->status !== 'diterima')
+                            @can('edit-penilaian')
+                            <form action="{{ route('assessments.destroy', $assessment) }}"
+                                  method="POST"
+                                  class="inline"
+                                  onsubmit="return confirm('Apakah Anda yakin ingin menghapus penilaian ini?')">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit"
+                                        class="text-red-600 hover:text-red-900"
+                                        title="Hapus">
+                                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                </button>
+                            </form>
+                            @endcan
+                            @endif
 
                             @if($assessment->status === 'disubmit')
                                 @can('approve-penilaian')
@@ -251,12 +237,50 @@
                                     @csrf
                                     <button type="submit"
                                             class="text-green-600 hover:text-green-900"
-                                            title="Approve">
+                                            title="Setujui">
                                         <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                         </svg>
                                     </button>
                                 </form>
+                                    <button onclick="openRejectModal()"
+                                            class="text-red-600 hover:text-red-900"
+                                            title="Tolak">
+                                            <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+  <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m15 9-6 6m0-6 6 6m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+</svg>
+                                    </button>
+                                <!-- Reject Modal -->
+<x-modal name="reject-modal" maxWidth="md">
+    <form action="{{ route('assessments.reject', $assessment) }}" method="POST" class="p-6 text-left">
+        @csrf
+        <h3 class="mb-4 text-lg font-medium text-gray-900">Tolak Penilaian</h3>
+
+        <div class="mb-4">
+            <label for="catatan" class="block mb-2 text-sm font-medium text-gray-700">
+                Alasan Penolakan <span class="text-red-500">*</span>
+            </label>
+            <textarea name="catatan"
+                      id="catatan"
+                      rows="4"
+                      required
+                      placeholder="Jelaskan alasan penolakan..."
+                      class="block w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"></textarea>
+        </div>
+
+        <div class="flex items-center justify-end space-x-3">
+            <button type="button"
+                    @click="$dispatch('close-modal', 'reject-modal')"
+                    class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
+                Batal
+            </button>
+            <button type="submit"
+                    class="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-md shadow-sm hover:bg-red-700">
+                Tolak Penilaian
+            </button>
+        </div>
+    </form>
+</x-modal>
                                 @endcan
                             @endif
                         </div>
@@ -293,3 +317,10 @@
     @endif
 </div>
 @endsection
+@push('scripts')
+<script>
+function openRejectModal() {
+    window.dispatchEvent(new CustomEvent('open-modal', { detail: 'reject-modal' }));
+}
+</script>
+@endpush

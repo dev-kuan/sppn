@@ -206,7 +206,7 @@ class ScoreCalculator {
         this.observationItems = observationItems;
         this.daysInMonth = daysInMonth;
 
-        console.log('🧮 ScoreCalculator initialized');
+        console.log('ScoreCalculator initialized');
         console.log('Observations count:', observations.length);
         console.log('Items count:', observationItems.length);
     }
@@ -216,7 +216,7 @@ class ScoreCalculator {
      */
 calculateAll() {
     const grouped = this.groupByVariabel();
-    console.log('📊 Grouped data:', grouped);
+    console.log('Grouped data:', grouped);
 
     const scores = {
         kepribadian: 0,
@@ -228,50 +228,50 @@ calculateAll() {
 
     Object.keys(grouped).forEach(variabelKey => {
         const aspects = grouped[variabelKey];
-        const aspectCountVariabel = Object.keys(aspects).length; // ✅ Jumlah aspek dalam variabel
+        const aspectCountVariabel = Object.keys(aspects).length; // Jumlah aspek dalam variabel
         let variabelScoreTotal = 0;
 
-        console.log(`\n📌 ${variabelKey} - Total Aspek: ${aspectCountVariabel} aspek`);
+        console.log(`\n${variabelKey} - Total Aspek: ${aspectCountVariabel} aspek`);
 
         Object.keys(aspects).forEach(aspekId => {
             const items = aspects[aspekId];
-            const itemsCountAspect = items.length; // ✅ Jumlah item dalam aspek
+            const itemsCountAspect = items.length; // Jumlah item dalam aspek
             let aspectScore = 0;
 
-            console.log(`\n  📂 Aspek ${aspekId} (${itemsCountAspect} items)`);
+            console.log(`\n  Aspek ${aspekId} (${itemsCountAspect} items)`);
 
             items.forEach(item => {
                 const checkedCount = this.getCheckedCount(item.id);
                 const frequency = item.frekuensi;
 
                 if (frequency > 0) {
-                    // ✅ Item Score = ((checked/frekuensi) * bobot) * (100/jumlah item dalam aspek)
+                    // Item Score = ((checked/frekuensi) * bobot) * (100/jumlah item dalam aspek)
                     const itemScore = ((checkedCount / frequency) * item.bobot) * (100 / itemsCountAspect);
-                    aspectScore += itemScore; // ✅ Aspect Score = jumlah seluruh item score
+                    aspectScore += itemScore; //  Aspect Score = jumlah seluruh item score
 
-                    console.log(`    Item ${item.id}: (${checkedCount}/${frequency}) × ${item.bobot} × (100/${itemsCountAspect}) = ${itemScore.toFixed(2)}`);
+                    console.log(`  Item ${item.id}: (${checkedCount}/${frequency}) × ${item.bobot} × (100/${itemsCountAspect}) = ${itemScore.toFixed(2)}`);
                 }
             });
 
             variabelScoreTotal += aspectScore;
-            console.log(`  ✅ Aspek ${aspekId} Score: ${aspectScore.toFixed(2)}`);
+            console.log(`  Aspek ${aspekId} Score: ${aspectScore.toFixed(2)}`);
         });
 
-        // ✅ Variabel Score = jumlah seluruh aspect score / jumlah aspect
+        //  Variabel Score = jumlah seluruh aspect score / jumlah aspect
         const variabelScore = variabelScoreTotal / aspectCountVariabel;
 
         if (scores.hasOwnProperty(variabelKey)) {
             scores[variabelKey] = variabelScore;
-            console.log(`✅ ${variabelKey} Score: ${variabelScore.toFixed(2)} (Total: ${variabelScoreTotal.toFixed(2)} / ${aspectCountVariabel} aspek)`);
+            console.log(`${variabelKey} Score: ${variabelScore.toFixed(2)} (Total: ${variabelScoreTotal.toFixed(2)} / ${aspectCountVariabel} aspek)`);
         } else {
-            console.warn(`⚠️ Key '${variabelKey}' tidak ada di scores object`);
+            console.warn(`Key '${variabelKey}' tidak ada di scores object`);
         }
     });
 
-    // ✅ Total Score = jumlah seluruh variabel score
+    // Total Score = jumlah seluruh variabel score
     scores.total = scores.kepribadian + scores.kemandirian + scores.sikap + scores.mental;
 
-    console.log('\n🎯 Final Scores:', scores);
+    console.log('\n Final Scores:', scores);
     return scores;
 }
 
@@ -279,23 +279,33 @@ calculateAll() {
      * Group observation items by variabel key (bukan nama)
      */
     groupByVariabel() {
-        const grouped = {};
+    const grouped = {};
 
-        this.observationItems.forEach(item => {
-            // ✅ Gunakan variabel_key, bukan variabel_nama
-            const variabelKey = item.variabel_key || item.variabel_nama;
+    this.observationItems.forEach(item => {
+        // ✅ FIX: Prioritaskan variabel_key, fallback ke mapping nama
+        let variabelKey = item.variabel_key;
 
-            if (!grouped[variabelKey]) {
-                grouped[variabelKey] = {};
-            }
-            if (!grouped[variabelKey][item.aspek_id]) {
-                grouped[variabelKey][item.aspek_id] = [];
-            }
-            grouped[variabelKey][item.aspek_id].push(item);
-        });
+        // Jika variabel_key kosong/undefined, derive dari variabel_nama
+        if (!variabelKey || variabelKey === item.variabel_nama) {
+            const nama = (item.variabel_nama || '').toLowerCase();
+            if (nama.includes('kepribadian'))  variabelKey = 'kepribadian';
+            else if (nama.includes('kemandirian')) variabelKey = 'kemandirian';
+            else if (nama.includes('sikap'))       variabelKey = 'sikap';
+            else if (nama.includes('mental'))      variabelKey = 'mental';
+            else variabelKey = nama; // fallback
+        }
 
-        return grouped;
-    }
+        if (!grouped[variabelKey]) {
+            grouped[variabelKey] = {};
+        }
+        if (!grouped[variabelKey][item.aspek_id]) {
+            grouped[variabelKey][item.aspek_id] = [];
+        }
+        grouped[variabelKey][item.aspek_id].push(item);
+    });
+
+    return grouped;
+}
 
     /**
      * Get count of checked observations for an item

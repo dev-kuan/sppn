@@ -156,134 +156,131 @@ class Assessment extends Model
 
     // Methods
     // Methods
-    public function calculateScores()
-    {
-        try {
-            Log::info('=== START SCORE CALCULATION ===', [
-                'assessment_id' => $this->id,
-                'tanggal_penilaian' => $this->tanggal_penilaian,
+public function calculateScores()
+{
+    try {
+        Log::info('=== START SCORE CALCULATION ===', [
+            'assessment_id' => $this->id,
+        ]);
+
+        $observationItems = ObservationItem::with('aspect.variabel')
+            ->aktif()
+            ->get();
+
+        $scores = [
+            'kepribadian' => 0,
+            'kemandirian' => 0,
+            'sikap' => 0,
+            'mental' => 0,
+        ];
+
+        // Group: variabel_id → aspek_id → items
+        $grouped = $observationItems->groupBy([
+            fn($item) => $item->aspect->assessment_variabel_id, // ✅ FIX: pakai assessment_variabel_id
+            fn($item) => $item->aspect_id,
+        ]);
+
+        foreach ($grouped as $variabelId => $aspects) {
+
+            // ✅ FIX: Ambil nama variabel dari relasi, bukan hardcode ID
+            $firstItem = $aspects->first()->first();
+            $variabelNama = strtolower($firstItem->aspect->variabel->nama ?? '');
+            $variabelKey = $this->mapVariabelName($variabelNama);
+            $aspectCount = $aspects->count();
+            $aspectScore = 0;
+            $variabelScore = 0;
+            $variabelScoreTotal = 0;
+
+            Log::info('--- Processing Variabel ---', [
+                'variabel_id'   => $variabelId,
+                'variabel_nama' => $variabelNama,
+                'variabel_key'  => $variabelKey,
+                'aspect_total' => $aspectCount,
             ]);
 
-            $observationItems = ObservationItem::with('aspect.variabel')
-                ->aktif()
-                ->get();
+            foreach ($aspects as $aspectId => $items) {
 
-            Log::info('Total observation items', [
-                'count' => $observationItems->count()
-            ]);
+                $itemsCountAspect = $items->count();
 
-            $scores = [
-                'kepribadian' => 0,
-                'kemandirian' => 0,
-                'sikap' => 0,
-                'mental' => 0,
-            ];
+                foreach ($items as $item) {
 
-            // Group: variabel → aspek → items
-            $grouped = $observationItems->groupBy([
-                fn($item) => $item->aspect->variabel_id,
-                fn($item) => $item->aspect_id,
-            ]);
+                    $checkedCount = $this->dailyObservations()
+                        ->where('observation_item_id', $item->id)
+                        ->where('is_checked', true)
+                        ->count();
 
-            foreach ($grouped as $variabelId => $aspeks) {
+                    $frequency = $item->frekuensi;
 
-                $variabelName = $this->mapVariabelName($variabelId);
-                $variabelScore = 0;
-
-                Log::info('--- Processing Variabel ---', [
-                    'variabel_id' => $variabelId,
-                    'variabel_name' => $variabelName,
-                    'total_aspek' => $aspeks->count(),
-                ]);
-
-                foreach ($aspeks as $aspekId => $items) {
-
-                    $itemsCountAspect = $items->count();
-
-                    Log::info('Processing Aspek', [
-                        'aspek_id' => $aspekId,
-                        'jumlah_item' => $itemsCountAspect,
-                    ]);
-
-                    foreach ($items as $item) {
-
-                        $checkedCount = $this->dailyObservations()
-                            ->where('observation_item_id', $item->id)
-                            ->where('is_checked', true)
-                            ->count();
-
-                        $frequency = $item->frekuensi;
-
-                        if ($frequency > 0 && $itemsCountAspect > 0) {
-                            $itemScore =
-                                (($checkedCount / $frequency) * $item->bobot)
-                                * (100 / $itemsCountAspect);
-                        } else {
-                            $itemScore = 0;
-                        }
-
-                        $variabelScore += $itemScore;
-
-                        Log::debug('Item calculation', [
-                            'item_id' => $item->id,
-                            'item_nama' => $item->nama_item,
-                            'checked' => $checkedCount,
-                            'frequency' => $frequency,
-                            'bobot' => $item->bobot,
-                            'items_in_aspek' => $itemsCountAspect,
-                            'item_score' => $itemScore,
-                            'variabel_running_total' => $variabelScore,
-                        ]);
+                    if ($frequency > 0 && $itemsCountAspect > 0) {
+                        $itemScore = (($checkedCount / $frequency) * $item->bobot)
+                            * (100 / $itemsCountAspect);
+                        $variabelScoreTotal += $itemScore;
+                    } else {
+                        $itemScore = 0;
                     }
-                }
 
-                if (isset($scores[$variabelName])) {
-                    $scores[$variabelName] = $variabelScore;
-                }
 
-                Log::info('Variabel result', [
-                    'variabel_name' => $variabelName,
-                    'variabel_score' => $variabelScore,
-                ]);
+                    Log::debug('Item calculation', [
+                        'item_id'       => $item->id,
+                        'checked'       => $checkedCount,
+                        'frequency'     => $frequency,
+                        'bobot'         => $item->bobot,
+                        'items_in_aspek'=> $itemsCountAspect,
+                        'item_score'    => $itemScore,
+                        ]);
+                        }
             }
 
-            $this->skor_kepribadian = $scores['kepribadian'];
-            $this->skor_kemandirian = $scores['kemandirian'];
-            $this->skor_sikap = $scores['sikap'];
-            $this->skor_mental = $scores['mental'];
-            $this->skor_total = array_sum($scores);
+            $variabelScore = $variabelScoreTotal / $aspectCount;
 
-            Log::info('FINAL SCORE RESULT', [
-                'kepribadian' => $this->skor_kepribadian,
-                'kemandirian' => $this->skor_kemandirian,
-                'sikap' => $this->skor_sikap,
-                'mental' => $this->skor_mental,
-                'total' => $this->skor_total,
-            ]);
-
-            $this->save();
-
-            Log::info('=== END SCORE CALCULATION ===');
-
-            return $this;
-        } catch (\Exception $e) {
-            Log::error('Error calculating scores: ' . $e->getMessage(), [
-                'assessment_id' => $this->id,
-                'trace' => $e->getTraceAsString()
-            ]);
-
-            throw $e;
+            if (isset($scores[$variabelKey])) {
+                $scores[$variabelKey] = $variabelScore;
+            } else {
+                Log::warning('Variabel key tidak dikenali', [
+                    'variabel_nama' => $variabelNama,
+                    'variabel_key'  => $variabelKey,
+                ]);
+            }
         }
-    }
 
-    private function mapVariabelName($variabelId)
-    {
-        return match ($variabelId) {
-            1 => 'kepribadian',
-            2 => 'kemandirian',
-            3 => 'sikap',
-            4 => 'mental',
-            default => 'unknown',
-        };
+        $this->skor_kepribadian = $scores['kepribadian'];
+        $this->skor_kemandirian = $scores['kemandirian'];
+        $this->skor_sikap       = $scores['sikap'];
+        $this->skor_mental      = $scores['mental'];
+        $this->skor_total       = array_sum($scores);
+
+        Log::info('FINAL SCORE RESULT', [
+            'kepribadian' => $this->skor_kepribadian,
+            'kemandirian' => $this->skor_kemandirian,
+            'sikap'       => $this->skor_sikap,
+            'mental'      => $this->skor_mental,
+            'total'       => $this->skor_total,
+        ]);
+
+        $this->save();
+
+        Log::info('=== END SCORE CALCULATION ===');
+
+        return $this;
+
+    } catch (\Exception $e) {
+        Log::error('Error calculating scores: ' . $e->getMessage(), [
+            'assessment_id' => $this->id,
+            'trace'         => $e->getTraceAsString()
+        ]);
+        throw $e;
     }
+}
+
+// FIX: mapping berdasarkan NAMA variabel, bukan ID
+private function mapVariabelName(string $variabelNama): string
+{
+    return match (true) {
+        str_contains($variabelNama, 'kepribadian') => 'kepribadian',
+        str_contains($variabelNama, 'kemandirian') => 'kemandirian',
+        str_contains($variabelNama, 'sikap')       => 'sikap',
+        str_contains($variabelNama, 'mental')      => 'mental',
+        default                                    => 'unknown',
+    };
+}
 }

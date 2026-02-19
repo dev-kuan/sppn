@@ -158,7 +158,7 @@
                 <div class="grid grid-cols-5 gap-4">
                     <div class="text-center">
                         <div class="text-sm font-medium text-gray-500">Kepribadian</div>
-                        <div class="mt-1 text-2xl font-semibold text-indigo-600" x-text="scores.kemandirian.toFixed(2)">0.00
+                        <div class="mt-1 text-2xl font-semibold text-indigo-600" x-text="scores.kepribadian.toFixed(2)">0.00
                         </div>
                     </div>
                     <div class="text-center">
