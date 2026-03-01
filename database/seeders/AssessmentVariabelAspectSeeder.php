@@ -14,9 +14,7 @@ class AssessmentVariabelAspectSeeder extends Seeder
      */
     public function run(): void
     {
-        // ============================================
         // 1. PEMBINAAN KEPRIBADIAN
-        // ============================================
         $pembinaanKepribadian = AssessmentVariabel::create([
             'nama' => 'Pembinaan Kepribadian',
         ]);
@@ -36,9 +34,7 @@ class AssessmentVariabelAspectSeeder extends Seeder
             ]);
         }
 
-        // ============================================
         // 2. PEMBINAAN KEMANDIRIAN
-        // ============================================
         $pembinaanKemandirian = AssessmentVariabel::create([
             'nama' => 'Pembinaan Kemandirian',
         ]);
@@ -55,9 +51,7 @@ class AssessmentVariabelAspectSeeder extends Seeder
             ]);
         }
 
-        // ============================================
         // 3. SIKAP NARAPIDANA
-        // ============================================
         $sikapNarapidana = AssessmentVariabel::create([
             'nama' => 'Penilaian Sikap',
         ]);
@@ -77,9 +71,7 @@ class AssessmentVariabelAspectSeeder extends Seeder
             ]);
         }
 
-        // ============================================
         // 4. KONDISI MENTAL NARAPIDANA
-        // ============================================
         $kondisiMental = AssessmentVariabel::create([
             'nama' => 'Penilaian Kondisi Mental',
         ]);
@@ -99,8 +91,19 @@ class AssessmentVariabelAspectSeeder extends Seeder
             ]);
         }
 
+
+        $pernyataanKomitmen = AssessmentVariabel::create([
+            'nama' => 'Pernyataan Komitmen',
+        ]);
+
+        AssessmentAspect::create([
+            'nama' => 'Pernyataan Komitmen',
+            'assessment_variabel_id' => $pernyataanKomitmen->id,
+        ]);
+
+
         $this->command->info('Assessment Variabel & Aspect seeded successfully!');
-        $this->command->info("- 4 Variabel created");
+        $this->command->info("- 5 Variabel created");
         $this->command->info("- " . AssessmentAspect::count() . " Aspek created");
     }
 }

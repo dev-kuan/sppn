@@ -2,31 +2,35 @@
 
 namespace App\Http\Controllers;
 
-use Carbon\Carbon;
-use App\Models\Inmate;
-use App\Models\Assessment;
-use Illuminate\Http\Request;
-use App\Models\ObservationItem;
-use App\Models\DailyObservation;
-use App\Models\AssessmentVariabel;
-use Illuminate\Support\Facades\DB;
-use App\Models\CommitmentStatement;
-use App\Services\AssessmentService;
-use Illuminate\Support\Facades\Log;
-use Maatwebsite\Excel\Facades\Excel;
-use App\Http\Requests\StoreAssessmentRequest;
+use App\Exports\AssessmentTemplateExport;
 use App\Http\Requests\ImportAssessmentRequest;
 use App\Http\Requests\RejectAssessmentRequest;
+use App\Http\Requests\StoreAssessmentRequest;
 use App\Http\Requests\UpdateObservationRequest;
+use App\Models\Assessment;
+use App\Models\AssessmentVariabel;
+use App\Models\CommitmentStatement;
+use App\Models\DailyObservation;
+use App\Models\Inmate;
+use App\Models\ObservationItem;
+use App\Services\AssessmentService;
+use App\Services\ConditionalItemService;
+use Carbon\Carbon;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Maatwebsite\Excel\Facades\Excel;
 
 class AssessmentController extends Controller
 {
 
     protected $assessmentService;
+    protected $conditionalItemService;
 
-    public function __construct(AssessmentService $assessmentService)
+    public function __construct(AssessmentService $assessmentService, ConditionalItemService $conditionalItemService)
     {
         $this->assessmentService = $assessmentService;
+        $this->conditionalItemService = $conditionalItemService;
     }
 
     public function index(Request $request)
@@ -56,11 +60,6 @@ class AssessmentController extends Controller
             $query->whereYear('tanggal_penilaian', $request->year);
         }
 
-        // // created by petugas
-        // if (auth()->user()->isPetugasInput()) {
-        //     $query->where('created_by', auth()->id());
-        // }
-
         $assessments = $query->latest('tanggal_penilaian')
             ->paginate(15)
             ->withQueryString();
@@ -77,10 +76,23 @@ class AssessmentController extends Controller
         $inmateId = $request->get('inmate_id');
         $inmate = $inmateId ? Inmate::findOrFail($inmateId) : null;
 
+        $tanggalPenilaian = $request->has('tanggal_penilaian')
+            ? Carbon::parse($request->tanggal_penilaian)
+            : Carbon::now();
+
+        // Check if need to show conditional items modal
+        $showConditionalModal = $this->conditionalItemService->shouldShowModal($tanggalPenilaian);
+        $conditionalItems = $this->conditionalItemService->getConditionalItems();
+
         // inmate not selected? show selected page
         if (!$inmate) {
             $inmates = Inmate::aktif()->orderBy('nama')->get();
-            return view('assessments.select-inmate', compact('inmates'));
+            return view('assessments.select-inmate', compact(
+                'inmates',
+                'showConditionalModal',
+                'conditionalItems',
+                'tanggalPenilaian'
+            ));
         }
 
         // Check if assessment already exists
@@ -99,7 +111,12 @@ class AssessmentController extends Controller
                 ->with('info', 'Penilaian untuk bulan ini sudah ada. Anda dapat melanjutkan mengisinya.');
         }
 
-        return view('assessments.create', compact('inmate'));
+        return view('assessments.create', compact(
+            'inmate',
+            'showConditionalModal',
+            'conditionalItems',
+            'tanggalPenilaian'
+        ));
     }
     public function store(StoreAssessmentRequest $request)
     {
@@ -144,69 +161,73 @@ class AssessmentController extends Controller
         $daysInMonth = $assessment->tanggal_penilaian->daysInMonth;
 
 
-        // ✅ Mapping nama variabel ke key yang pendek
         $variabelMapping = [
             'Pembinaan Kepribadian' => 'kepribadian',
             'Pembinaan Kemandirian' => 'kemandirian',
             'Penilaian Sikap' => 'sikap',
-            'Penilaian Kondisi Mental' => 'mental'
+            'Penilaian Kondisi Mental' => 'mental',
+            'Pernyataan Komitmen' => 'komitmen'
         ];
 
         // Format data observationItems dengan struktur yang benar
-    $observationItemsArray = [];
+        $observationItemsArray = [];
 
-    foreach ($variabels as $variabel) {
-        $variabelNamaLower = strtolower($variabel->nama);
-        $variabelKey = $variabelMapping[$variabelNamaLower] ?? $variabelNamaLower;
+        foreach ($variabels as $variabel) {
+            $variabelNamaLower = strtolower($variabel->nama);
+            $variabelKey = $variabelMapping[$variabelNamaLower] ?? $variabelNamaLower;
 
-        foreach ($variabel->aspect as $aspek) {
-            foreach ($aspek->observationItems as $item) {
-                $observationItemsArray[] = [
-                    'id' => $item->id,
-                    'bobot' => (float) $item->bobot,
-                    'frekuensi' => (int) $item->frekuensi,
-                    'variabel_id' => $variabel->id,
-                    'variabel_nama' => $variabelNamaLower,  // nama asli dari DB
-                    'variabel_key' => $variabelKey,  // ✅ key pendek untuk mapping
-                    'aspek_id' => $aspek->id,
-                    'aspek_nama' => $aspek->nama
-                ];
+            foreach ($variabel->aspect as $aspek) {
+                foreach ($aspek->observationItems as $item) {
+                    $frequency = $item->getFrequencyForMonth($assessment->tanggal_penilaian);
+                    $observationItemsArray[] = [
+                        'id' => $item->id,
+                        'bobot' => (float) $item->bobot,
+                        'frekuensi' => (int) $frequency,
+                        'variabel_id' => $variabel->id,
+                        'variabel_nama' => $variabelNamaLower,
+                        'variabel_key' => $variabelKey,
+                        'aspek_id' => $aspek->id,
+                        'aspek_nama' => $aspek->nama
+                    ];
+                }
             }
         }
-    }
 
-    // Prepare existing observations data
-    $observationData = [];
-    foreach ($assessment->dailyObservations as $obs) {
-        $observationData[$obs->observation_item_id][$obs->hari] = $obs;
-    }
+        // Prepare existing observations data
+        $observationData = [];
+        foreach ($assessment->dailyObservations as $obs) {
+            $observationData[$obs->observation_item_id][$obs->hari] = $obs;
+        }
 
-    // Prepare checked observations untuk inisialisasi frontend
-    $checkedObservations = $assessment->dailyObservations()
-        ->where('observation_item_id', $item->id)
-        ->where('is_checked', true)
-        ->get();
+        $observationSummary = [];
 
-        // foreach ($variabels as $variabel) {
-        //     foreach ($variabel->aspect as $aspek) {
-        //         foreach ($aspek->observationItems as $item) {
-        //             $observations = DailyObservation::where('assessment_id', $assessment->id)
-        //                 ->where('observation_item_id', $item->id)
-        //                 ->get()
-        //                 ->keyBy('hari');
+        foreach ($observationData as $itemId => $days) {
+            $observationSummary[$itemId] = collect($days)
+                ->where('is_checked', true)
+                ->count();
+        }
 
-        //             $observationData[$item->id] = $observations;
-        //         }
-        //     }
-        // }
+        // Prepare checked observations untuk inisialisasi frontend
+        $checkedObservations = $assessment->dailyObservations()
+            ->where('is_checked', true)
+            ->get()
+            ->map(function ($obs) {
+                return [
+                    'observation_item_id' => $obs->observation_item_id,
+                    'hari' => $obs->hari,
+                    'is_checked' => true
+                ];
+            })
+            ->toArray();
 
         return view('assessments.show', compact(
             'assessment',
             'variabels',
             'observationData',
+            'observationSummary',
             'daysInMonth',
             'checkedObservations'
-            ));
+        ));
     }
     public function edit(Assessment $assessment)
     {
@@ -223,14 +244,15 @@ class AssessmentController extends Controller
             $q->aktif()->ordered();
         }])->get();
 
-        $daysInMonth = $assessment->tanggal_penilaian->daysInMonth;
+        $daysInMonth = $assessment->tanggal_penilaian->daysInMonth();
 
         // ✅ Mapping nama variabel ke key yang pendek
         $variabelMapping = [
             'Pembinaan Kepribadian' => 'kepribadian',
             'Pembinaan Kemandirian' => 'kemandirian',
             'Penilaian Sikap' => 'sikap',
-            'Penilaian Kondisi Mental' => 'mental'
+            'Penilaian Kondisi Mental' => 'mental',
+            'Pernyataan Komitmen' => 'komitmen'
         ];
 
         // Format data observationItems dengan struktur yang benar
@@ -242,10 +264,12 @@ class AssessmentController extends Controller
 
             foreach ($variabel->aspect as $aspek) {
                 foreach ($aspek->observationItems as $item) {
+                    $frequency = $item->getFrequencyForMonth($assessment->tanggal_penilaian);
+
                     $observationItemsArray[] = [
                         'id' => $item->id,
                         'bobot' => (float) $item->bobot,
-                        'frekuensi' => (int) $item->frekuensi,
+                        'frekuensi' => (int) $frequency,
                         'variabel_id' => $variabel->id,
                         'variabel_nama' => $variabelNamaLower,
                         'variabel_key' => $variabelKey,
@@ -316,6 +340,7 @@ class AssessmentController extends Controller
                     'kemandirian' => $updatedAssessment->skor_kemandirian,
                     'sikap' => $updatedAssessment->skor_sikap,
                     'mental' => $updatedAssessment->skor_mental,
+                    'komitmen' => $updatedAssessment->skor_komitmen,
                     'total' => $updatedAssessment->skor_total,
                 ],
             ]);
@@ -327,6 +352,39 @@ class AssessmentController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Terjadi kesalahan saat menyimpan data',
+            ], 500);
+        }
+    }
+
+    public function updateAspectNote(Request $request, Assessment $assessment)
+    {
+        $validated = $request->validate([
+            'aspect_id' => 'required|exists:assessment_aspects,id',
+            'catatan' => 'required|string|max:1000',
+        ]);
+
+        try {
+            $assessmentScore = $this->assessmentService->updateAspectScoreCatatan(
+                $assessment,
+                $validated['aspect_id'],
+                $validated['catatan']
+            );
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Catatan aspek berhasil disimpan',
+                'data' => $assessmentScore,
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('Catatan aspek gagal disimpan: ', [
+                'assessment_id' => $assessment->id,
+                'aspect_id' => $validated['aspect_id'],
+                'error' => $e->getMessage()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan saat menyimpan catatan',
             ], 500);
         }
     }
@@ -397,7 +455,7 @@ class AssessmentController extends Controller
                 $assessment->tanggal_penilaian->format('d-m-Y') . '.xlsx';
 
             return Excel::download(
-                new \App\Exports\AssessmentTemplateExport($assessment),
+                new AssessmentTemplateExport($assessment),
                 $fileName
             );
         } catch (\Exception $e) {
@@ -441,6 +499,70 @@ class AssessmentController extends Controller
                 'error',
                 'Terjadi kesalahan saat mengimport file.'
             );
+        }
+    }
+
+    public function setConditionalItems(Request $request)
+    {
+        $request->validate([
+            'selections' => 'required|array',
+            'tanggal_penilaian' => 'required|date',
+            'dont_show_again' => 'boolean',
+        ]);
+
+        try {
+            $tanggalPenilaian = Carbon::parse($request->tanggal_penilaian);
+
+            $result = $this->conditionalItemService->updateConditionalBobots(
+                $request->selections,
+                $tanggalPenilaian
+            );
+
+            // Handle "don't show again" option
+            if ($request->boolean('dont_show_again')) {
+                $this->conditionalItemService->skipModalThisMonth($tanggalPenilaian);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Pengaturan kegiatan berhasil disimpan',
+                'data' => $result,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Failed to set conditional items', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Skip conditional items modal for current month
+     */
+    public function skipConditionalModal(Request $request)
+    {
+        $request->validate([
+            'tanggal_penilaian' => 'required|date',
+        ]);
+
+        try {
+            $tanggalPenilaian = Carbon::parse($request->tanggal_penilaian);
+            $this->conditionalItemService->skipModalThisMonth($tanggalPenilaian);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Modal tidak akan ditampilkan lagi bulan ini',
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan',
+            ], 500);
         }
     }
 }

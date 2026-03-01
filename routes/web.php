@@ -77,15 +77,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('assessments', [AssessmentController::class, 'store'])->name('assessments.store');
         Route::get('/{assessment}/export-template', [AssessmentController::class, 'exportTemplate'])->name('assessments.export-template');
         Route::post('/{assessment}/import', [AssessmentController::class, 'import'])->name('assessments.import');
+        Route::post('assessments/set-conditional-items', [AssessmentController::class, 'setConditionalItems'])
+            ->name('assessments.set-conditional-items');
+
+        Route::post('assessments/skip-conditional-modal', [AssessmentController::class, 'skipConditionalModal'])
+            ->name('assessments.skip-conditional-modal');
     });
     Route::middleware('permission:view-penilaian')->group(function () {
         Route::get('assessments', [AssessmentController::class, 'index'])->name('assessments.index');
         Route::get('assessments/{assessment}', [AssessmentController::class, 'show'])->name('assessments.show');
     });
-    // Route::middleware('permission:delete-penilaian')->group(function () {
-    //     Route::delete('assessments/{assessment}', [AssessmentController::class, 'destroy'])->name('assessments.destroy');
-    //     });
-
 
     Route::middleware('permission:edit-penilaian')->group(function () {
         Route::get('assessments/{assessment}/edit', [AssessmentController::class, 'edit'])->name('assessments.edit');
@@ -95,6 +96,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
             'assessments/{assessment}/observation',
             [AssessmentController::class, 'updateObservation']
         )->name('assessments.update-observation');
+        Route::post(
+            'assessments/{assessment}/aspect-note',
+            [AssessmentController::class, 'updateAspectNote']
+        )->name('assessments.update-aspect-note');
         Route::get('/{assessment}/export-template', [AssessmentController::class, 'exportTemplate'])->name('assessments.export-template');
         Route::post('/{assessment}/import', [AssessmentController::class, 'import'])->name('assessments.import');
     });
@@ -180,19 +185,16 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::get('/backup', [SettingController::class, 'backup'])->name('backup');
             Route::get('/logs', [SettingController::class, 'logs'])->name('logs');
         });
+
+        Route::get('/system', [SettingController::class, 'system'])
+            ->name('system.index');
+
+        Route::put('/system', [SettingController::class, 'updateSystem'])
+            ->name('system.update');
+
+        Route::post('/system/reset', [SettingController::class, 'resetSystem'])
+            ->name('system.reset');
     });
 });
 
 require __DIR__ . '/auth.php';
-
-// Route::get('/dashboard', function () {
-//     return view('dashboard');
-// })->middleware(['auth', 'verified'])->name('dashboard');
-
-// Route::middleware('auth')->group(function () {
-//     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-//     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-//     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-// });
-
-// require __DIR__.'/auth.php';

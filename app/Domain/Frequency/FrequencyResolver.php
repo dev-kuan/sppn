@@ -31,7 +31,7 @@ class FrequencyResolver
                 self::resolveMingguan($day, [7=>20, 14=>15, 21=>10, 31=>2]),
 
             JenisFrekuensi::KONDISIONAL =>
-                $kegiatanDiselenggarakan ? 1 : 0,
+                self::resolveKondisional($item, $tanggalPenilaian),
 
             JenisFrekuensi::FIX =>
                 1,
@@ -49,5 +49,18 @@ class FrequencyResolver
         }
 
         return 0;
+    }
+
+     private static function resolveKondisional(ObservationItem $item, Carbon $tanggalPenilaian): int
+    {
+        $monthKey = $tanggalPenilaian->format('Y-m');
+        $isSetThisMonth = $item->bobot_last_set_month === $monthKey;
+        $isDiselenggarakan = $item->bobot > 0;
+        if ($isSetThisMonth && $isDiselenggarakan) {
+            return 1;
+        }
+
+        // Default: jika belum di-set atau tidak diselenggarakan
+        return $isDiselenggarakan ? 1 : 0;
     }
 }

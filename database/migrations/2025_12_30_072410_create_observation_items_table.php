@@ -17,8 +17,9 @@ return new class extends Migration
             $table->foreignId('variabel_id')->constrained('assessment_variabels');
             $table->foreignId('aspect_id')->constrained('assessment_aspects');
             $table->string('nama_item');
-            $table->decimal('bobot_item', 10, 2)->default(1);
             $table->decimal('bobot', 10, 2)->default(1.00);
+            $table->decimal('bobot_default', 10, 2)->default(1.00)->after('bobot');
+            $table->string('bobot_last_set_month', 7)->nullable()->after('bobot_default');
             $table->boolean('is_conditional_weight')->default(false);
             $table->enum('jenis_frekuensi',['Harian', 'Mingguan1', 'Mingguan2', 'Mingguan3', 'Kondisional', 'Periodik', 'Fix']);
             $table->boolean('use_dynamic_frequency')->default(false);

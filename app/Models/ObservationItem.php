@@ -2,12 +2,14 @@
 
 namespace App\Models;
 
+use App\Domain\Frequency\FrequencyResolver;
 use App\Enums\JenisFrekuensi;
-use Spatie\Activitylog\LogOptions;
-use Illuminate\Database\Eloquent\Model;
-use Spatie\Activitylog\Traits\LogsActivity;
-use Illuminate\Database\Eloquent\SoftDeletes;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class ObservationItem extends Model
 {
@@ -20,6 +22,8 @@ class ObservationItem extends Model
         'nama_item',
         'bobot_item',
         'bobot',
+        'bobot_default',
+        'bobot_last_set_month',
         'is_conditional_weight',
         'jenis_frekuensi',
         'use_dynamic_frequency',
@@ -32,6 +36,7 @@ class ObservationItem extends Model
         'aspect_id' => 'integer',
         'bobot_item' => 'decimal:2',
         'bobot' => 'decimal:2',
+        'bobot_default' => 'decimal:2',
         'is_conditional_weight' => 'boolean',
         'jenis_frekuensi' => JenisFrekuensi::class,
         'sort_order' => 'integer',
@@ -58,11 +63,6 @@ class ObservationItem extends Model
     {
         return $this->belongsTo(AssessmentAspect::class, 'aspect_id');
     }
-
-    // public function frequencyRule()
-    // {
-    //     return $this->belongsTo(FrequencyRule::class);
-    // }
 
     public function dailyObservations()
     {
@@ -95,36 +95,51 @@ class ObservationItem extends Model
         return $query->with(['variabel', 'aspect']);
     }
 
+    public function scopeConditional($query)
+    {
+        return $query->where('jenis_frekuensi', JenisFrekuensi::KONDISIONAL);
+    }
 
     public function getFrekuensiAttribute()
 {
-    return \App\Domain\Frequency\FrequencyResolver::resolve(
+    return FrequencyResolver::resolve(
         $this,
         now()
     );
 }
+public function getFrequencyForMonth(Carbon $tanggalPenilaian): int
+    {
+        return FrequencyResolver::resolve(
+            $this,
+            $tanggalPenilaian
+        );
+    }
 
+/**
+     * Check if this item is conditional and bobot can be modified
+     */
+    public function isConditional(): bool
+    {
+        return $this->jenis_frekuensi === JenisFrekuensi::KONDISIONAL;
+    }
 
-    // Methods
-// public function calculateFrequency($daysInMonth)
-// {
-//     // If using dynamic frequency with rules
-//     if ($this->use_dynamic_frequency && $this->frequency_rule) {
-//         $rules = is_string($this->frequency_rule)
-//             ? json_decode($this->frequency_rule, true)
-//             : $this->frequency_rule;
+    /**
+     * Check if bobot has been set for current month
+     */
+    public function isBobotSetForMonth(string $monthKey): bool
+    {
+        return $this->bobot_last_set_month === $monthKey;
+    }
 
-//         if (isset($rules['formula']) && is_array($rules['formula'])) {
-//             foreach ($rules['formula'] as $rule) {
-//                 if ($daysInMonth <= ($rule['max_days'] ?? 31)) {
-//                     return $rule['frequency'] ?? $this->jenis_frekuensi;
-//                 }
-//             }
-//         }
-//     }
-
-//     // Default: use static frequency
-//     return $this->jenis_frekuensi ?? 0;
-// }
+    /**
+     * Reset bobot to default value
+     */
+    public function resetBobotToDefault(): void
+    {
+        $this->update([
+            'bobot' => $this->bobot_default,
+            'bobot_last_set_month' => null,
+        ]);
+    }
 
 }

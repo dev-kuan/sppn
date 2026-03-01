@@ -66,12 +66,13 @@ class AssessmentTemplateExport implements FromArray, WithStyles, WithColumnWidth
         foreach ($this->variabels as $variabel) {
             foreach ($variabel->aspect as $aspek) {
                 foreach ($aspek->observationItems as $item) {
+                    $frequency = $item->getFrequencyForMonth($this->assessment->tanggal_penilaian);
                     $row = [
                         $variabel->nama,
                         $aspek->nama,
                         $item->nama_item,
                         $item->bobot,
-                        $item->frekuensi
+                        $frequency
                     ];
 
                     // Add empty cells for each day

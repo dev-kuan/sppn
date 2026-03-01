@@ -112,6 +112,12 @@
                                 Activity Log
                             </a>
                         </li>
+                        <li>
+                            <a href="{{ route('settings.system.index') }}"
+                               class="{{ request()->routeIs('settings.system.index') ? 'bg-gray-100 text-indigo-600' : 'text-gray-600 hover:text-indigo-600 hover:bg-gray-50' }} group flex gap-x-3 rounded-md p-2 pl-9 text-sm leading-6">
+                                Sistem
+                            </a>
+                        </li>
                     </ul>
                 </li>
                 @endcan

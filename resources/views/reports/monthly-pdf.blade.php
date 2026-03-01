@@ -239,7 +239,6 @@ tr:nth-child(even) {
     <th>Skor</th>
     <th>Penilai</th>
     <th>Status</th>
-    <th>Blok</th>
 </tr>
 </thead>
 

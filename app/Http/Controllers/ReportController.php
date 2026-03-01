@@ -2,17 +2,26 @@
 
 namespace App\Http\Controllers;
 
-use Carbon\Carbon;
-use App\Models\Inmate;
-use App\Models\Assessment;
-use Illuminate\Http\Request;
 use App\Exports\AssessmentExport;
-use Barryvdh\DomPDF\Facade\Pdf;
+use App\Exports\InmateExport;
+use App\Models\Assessment;
 use App\Models\AssessmentVariabel;
+use App\Models\Inmate;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\File;
 use Maatwebsite\Excel\Facades\Excel;
 
 class ReportController extends Controller
 {
+
+private $configPath;
+
+    public function __construct()
+    {
+        $this->configPath = config_path('institution.php');
+    }
     /**
      * Show report generation page
      */
@@ -50,17 +59,20 @@ class ReportController extends Controller
             $q->aktif()->ordered();
         }])->get();
 
+         // Load institution data
+        $institution = $this->getInstitutionData();
         $observationData = $this->getObservationData($assessment, $variabels);
 
         $pdf = Pdf::loadView('reports.assessment-pdf', [
             'assessment' => $assessment,
             'observationData' => $observationData,
+            'institution' => $institution,
         ]);
 
         $pdf->setPaper('a4', 'portrait');
 
         $filename = 'Laporan_Penilaian_' . $assessment->inmate->nama . '_' .
-                    $assessment->tanggal_penilaian->format('Y-m') . '.pdf';
+                    $assessment->tanggal_penilaian->format('d-m-Y') . '.pdf';
 
         return $pdf->download($filename);
     }
@@ -359,5 +371,47 @@ private function getObservationData($assessment, $variabels)
         }
 
         return 'stabil';
+    }
+
+    private function getInstitutionData()
+    {
+        return [
+            'name' => config('institution.name', 'Lembaga Pemasyarakatan'),
+            'address' => config('institution.address', ''),
+            'phone' => config('institution.phone', ''),
+            'email' => config('institution.email', ''),
+            'officers' => [
+                'officer1' => [
+                    'name' => config('institution.officers.officer1.name', ''),
+                    'nip' => config('institution.officers.officer1.nip', ''),
+                    'position' => config('institution.officers.officer1.position', ''),
+                    'signature' => $this->getSignaturePath('officer1'),
+                ],
+                'officer2' => [
+                    'name' => config('institution.officers.officer2.name', ''),
+                    'nip' => config('institution.officers.officer2.nip', ''),
+                    'position' => config('institution.officers.officer2.position', ''),
+                    'signature' => $this->getSignaturePath('officer2'),
+                ],
+            ],
+        ];
+    }
+
+    /**
+     * Get signature file path for PDF
+     *
+     * @param string $officer
+     * @return string|null
+     */
+    private function getSignaturePath($officer)
+    {
+        $signaturePath = config("institution.officers.{$officer}.signature");
+
+        if ($signaturePath) {
+            // Return absolute path untuk DomPDF
+            return storage_path('app/public/' . $signaturePath);
+        }
+
+        return null;
     }
 }

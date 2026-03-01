@@ -2,21 +2,24 @@
 
 namespace App\Services;
 
-use Carbon\Carbon;
-use App\Models\Assessment;
-use App\Models\ObservationItem;
-use App\Models\DailyObservation;
 use App\Imports\AssessmentImport;
+use App\Models\Assessment;
+use App\Models\AssessmentScore;
+use App\Models\CommitmentStatement;
+use App\Models\DailyObservation;
+use App\Models\ObservationItem;
+use App\Services\Assessment\ImportResult;
+use Carbon\Carbon;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
-use App\Models\CommitmentStatement;
 use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Facades\Excel;
-use App\Services\Assessment\ImportResult;
 
-class AssessmentService {
+class AssessmentService
+{
 
-    public function storeAssessment(array $data): Assessment {
+    public function storeAssessment(array $data): Assessment
+    {
         return DB::transaction(function () use ($data) {
             // check duplicate
             $this->ensureNotDuplicate($data);
@@ -25,7 +28,6 @@ class AssessmentService {
             $assessment = Assessment::create([
                 'inmate_id' => $data['inmate_id'],
                 'tanggal_penilaian' => $data['tanggal_penilaian'],
-                'status' => 'draf',
                 'created_by' => auth()->id(),
             ]);
 
@@ -36,34 +38,50 @@ class AssessmentService {
             $this->createCommitmentStatements($assessment);
 
             // log
-            $this->logAssessmentActivity($assessment, 'create');
+            $this->logAssessmentActivity($assessment, 'created');
 
             return $assessment;
         });
     }
 
     public function updateObservation(Assessment $assessment, array $data)
-{
-    return DB::transaction(function () use ($assessment, $data) {
+    {
+        return DB::transaction(function () use ($assessment, $data) {
 
-        DailyObservation::updateOrCreate(
-            [
-                'assessment_id' => $assessment->id,
-                'observation_item_id' => $data['observation_item_id'],
-                'hari' => $data['hari'],
-            ],
-            [
-                'is_checked' => $data['is_checked'],
-                'catatan' => $data['catatan'],
-            ]
-        );
+            DailyObservation::updateOrCreate(
+                [
+                    'assessment_id' => $assessment->id,
+                    'observation_item_id' => $data['observation_item_id'],
+                    'hari' => $data['hari'],
+                ],
+                [
+                    'is_checked' => $data['is_checked'],
+                    'catatan' => $data['catatan'],
+                ]
+            );
 
-        return $assessment->calculateScores();
-    });
-}
+            return $assessment->calculateScores();
+        });
+    }
+
+    public function updateAspectScoreCatatan(Assessment $assessment, int $aspectId, string $catatan)
+    {
+        return DB::transaction(function () use ($assessment, $aspectId, $catatan) {
+            $assessmentScore = AssessmentScore::where('assessment_id', $assessment->id)
+                ->where('aspect_id', $aspectId)
+                ->firstOrFail();
+
+            $assessmentScore->update(['catatan' => $catatan]);
+
+            $this->logAssessmentActivity($assessment, 'aspect-review-updated');
+
+            return $assessmentScore;
+        });
+    }
 
 
-    public function deleteAssessment(Assessment $assessment) {
+    public function deleteAssessment(Assessment $assessment)
+    {
         DB::beginTransaction();
         try {
             $assessment->delete();
@@ -79,11 +97,17 @@ class AssessmentService {
         }
     }
 
-    public function submitAssessment(Assessment $assessment) {
+    public function submitAssessment(Assessment $assessment)
+    {
 
         // only draft/reject can be submited
         if ($assessment->status !== 'draf' && $assessment->status !== 'ditolak') {
             throw new \DomainException('Hanya penilaian dengan status draf/ditolak yang dapat disubmit.');
+        }
+
+        // Check if all aspect scores have been reviewed
+        if (!$assessment->hasAllAspectScoresReviewed()) {
+            throw new \DomainException('Semua aspek harus direview dan diberi catatan sebelum submit.');
         }
 
         DB::transaction(function () use ($assessment) {
@@ -96,7 +120,8 @@ class AssessmentService {
         });
     }
 
-    public function approveAssessment(Assessment $assessment) {
+    public function approveAssessment(Assessment $assessment)
+    {
 
         // only submited can be approved
         if ($assessment->status !== 'disubmit') {
@@ -113,7 +138,8 @@ class AssessmentService {
             $this->logAssessmentActivity($assessment, 'approved');
         });
     }
-    public function rejectAssessment(Assessment $assessment, array $data) {
+    public function rejectAssessment(Assessment $assessment, array $data)
+    {
         DB::transaction(function () use ($assessment, $data) {
             $assessment->update([
                 'status' => 'ditolak',
@@ -126,8 +152,9 @@ class AssessmentService {
         });
     }
 
-    public function importAssessment(Assessment $assessment, UploadedFile $file) {
-         return DB::transaction(function () use ($assessment, $file) {
+    public function importAssessment(Assessment $assessment, UploadedFile $file)
+    {
+        return DB::transaction(function () use ($assessment, $file) {
 
             $import = new AssessmentImport($assessment);
             Excel::import($import, $file);
@@ -146,20 +173,23 @@ class AssessmentService {
         });
     }
 
-    private function ensureNotDuplicate(array $data) {
+    private function ensureNotDuplicate(array $data)
+    {
         $exists = Assessment::where('inmate_id', $data['inmate_id'])
-                ->whereMonth('tanggal_penilaian', Carbon::parse($data['tanggal_penilaian'])->month)
-                ->whereYear('tanggal_penilaian', Carbon::parse($data['tanggal_penilaian'])->year)
-                ->withoutTrashed()
-                ->exists();
+            ->where('status', '=', 'submit')
+            ->whereMonth('tanggal_penilaian', Carbon::parse($data['tanggal_penilaian'])->month)
+            ->whereYear('tanggal_penilaian', Carbon::parse($data['tanggal_penilaian'])->year)
+            ->withoutTrashed()
+            ->exists();
 
         if ($exists) {
             throw new \DomainException('Penilaian untuk bulan tersebut sudah ada.');
         }
     }
 
-    private function createCommitmentStatements(Assessment $assessment) {
-            // Initialize commitment statements
+    private function createCommitmentStatements(Assessment $assessment)
+    {
+        // Initialize commitment statements
         CommitmentStatement::create([
             'assessment_id' => $assessment->id,
             'jenis' => 'nkri',
@@ -175,7 +205,7 @@ class AssessmentService {
 
     private function initializeDailyObservations(Assessment $assessment)
     {
-        $daysInMonth = $assessment->tanggal_penilaian->daysInMonth;
+        $daysInMonth = $assessment->tanggal_penilaian->daysInMonth();
         $observationItems = ObservationItem::aktif()->get();
 
         foreach ($observationItems as $item) {
@@ -198,6 +228,7 @@ class AssessmentService {
             'rejected' => 'Penilaian ditolak untuk: ' . $assessment->inmate->nama,
             'approved' => 'Penilaian disetujui untuk: ' . $assessment->inmate->nama,
             'imported' => 'Import data penilaian untuk: ' . $assessment->inmate->nama,
+            'aspect-review-updated' => 'Review aspek diperbarui untuk: ' . $assessment->inmate->nama,
         ];
 
         activity()
@@ -205,6 +236,4 @@ class AssessmentService {
             ->causedBy(auth()->user())
             ->log($messages[$action] ?? 'Aktivitas Penilaian: ' . $action);
     }
-
-
 }

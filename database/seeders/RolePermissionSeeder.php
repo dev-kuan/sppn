@@ -107,6 +107,7 @@ class RolePermissionSeeder extends Seeder
             'view-penilaian',
             'create-penilaian',
             'edit-penilaian',
+            'submit-penilaian',
             'view-laporan',
         ]);
 

@@ -2,18 +2,26 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use App\Models\ObservationItem;
 use App\Models\AssessmentAspect;
 use App\Models\AssessmentVariabel;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
+use App\Models\ObservationItem;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Spatie\Activitylog\Models\Activity;
 
 class SettingController extends Controller
 {
+
+    private $configPath;
+
+    public function __construct()
+    {
+        $this->configPath = config_path('institution.php');
+    }
     /**
      * Display settings dashboard
      */
@@ -25,7 +33,7 @@ class SettingController extends Controller
             'variabels' => AssessmentVariabel::count(),
             'aspects' => AssessmentAspect::count(),
             'observation_items' => ObservationItem::count(),
-            'active_items' => ObservationItem::aktif()->count(),
+            'active_items' => ObservationItem::aktif()->get(),
         ];
 
         return view('settings.index', compact('stats'));
@@ -357,5 +365,161 @@ class SettingController extends Controller
             ->paginate(50);
 
         return view('settings.logs.index', compact('activities'));
+    }
+
+    public function system() {
+        return view('settings.systems.index');
+    }
+
+    public function updateSystem(Request $request) {
+// Validasi input
+        $validated = $request->validate([
+            'institution_name' => 'required|string|max:255',
+            'institution_address' => 'nullable|string|max:500',
+            'institution_phone' => 'nullable|string|max:20',
+            'institution_email' => 'nullable|email|max:100',
+
+            'officer1_name' => 'required|string|max:255',
+            'officer1_nip' => 'required|string|max:30',
+            'officer1_position' => 'required|string|max:255',
+            'officer1_signature' => 'nullable|image|mimes:png,jpg,jpeg|max:2048',
+
+            'officer2_name' => 'required|string|max:255',
+            'officer2_nip' => 'required|string|max:30',
+            'officer2_position' => 'required|string|max:255',
+            'officer2_signature' => 'nullable|image|mimes:png,jpg,jpeg|max:2048',
+        ]);
+
+        try {
+            // Load konfigurasi yang ada
+            $config = $this->loadConfig();
+
+            // Update informasi institusi
+            $config['name'] = $validated['institution_name'];
+            $config['address'] = $validated['institution_address'] ?? '';
+            $config['phone'] = $validated['institution_phone'] ?? '';
+            $config['email'] = $validated['institution_email'] ?? '';
+
+            // Update officer 1
+            $config['officers']['officer1']['name'] = $validated['officer1_name'];
+            $config['officers']['officer1']['nip'] = $validated['officer1_nip'];
+            $config['officers']['officer1']['position'] = $validated['officer1_position'];
+
+            // Handle upload tanda tangan officer 1
+            if ($request->hasFile('officer1_signature')) {
+                // Hapus tanda tangan lama jika ada
+                if (!empty($config['officers']['officer1']['signature'])) {
+                    Storage::disk('public')->delete($config['officers']['officer1']['signature']);
+                }
+
+                // Simpan tanda tangan baru
+                $path = $request->file('officer1_signature')->store('signatures', 'public');
+                $config['officers']['officer1']['signature'] = $path;
+            }
+
+            // Update officer 2
+            $config['officers']['officer2']['name'] = $validated['officer2_name'];
+            $config['officers']['officer2']['nip'] = $validated['officer2_nip'];
+            $config['officers']['officer2']['position'] = $validated['officer2_position'];
+
+            // Handle upload tanda tangan officer 2
+            if ($request->hasFile('officer2_signature')) {
+                // Hapus tanda tangan lama jika ada
+                if (!empty($config['officers']['officer2']['signature'])) {
+                    Storage::disk('public')->delete($config['officers']['officer2']['signature']);
+                }
+
+                // Simpan tanda tangan baru
+                $path = $request->file('officer2_signature')->store('signatures', 'public');
+                $config['officers']['officer2']['signature'] = $path;
+            }
+
+            // Simpan konfigurasi ke file
+            $this->saveConfig($config);
+
+            // Clear config cache
+            Artisan::call('config:clear');
+
+            return redirect()->route('settings.system.index')
+                ->with('success', 'Pengaturan sistem berhasil diperbarui.');
+
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->with('error', 'Gagal memperbarui pengaturan: ' . $e->getMessage())
+                ->withInput();
+        }
+    }
+
+    private function loadConfig()
+    {
+        if (File::exists($this->configPath)) {
+            return include $this->configPath;
+        }
+
+        // Return default config jika file belum ada
+        return [
+            'name' => 'Lembaga Pemasyarakatan',
+            'address' => '',
+            'phone' => '',
+            'email' => '',
+            'officers' => [
+                'officer1' => [
+                    'name' => '',
+                    'nip' => '',
+                    'position' => '',
+                    'signature' => '',
+                ],
+                'officer2' => [
+                    'name' => '',
+                    'nip' => '',
+                    'position' => '',
+                    'signature' => '',
+                ],
+            ],
+        ];
+    }
+
+    /**
+     * Save configuration to file
+     */
+    private function saveConfig(array $config)
+    {
+        $content = "<?php\n\nreturn " . var_export($config, true) . ";\n";
+
+        File::put($this->configPath, $content);
+    }
+
+    /**
+     * Reset settings to default
+     */
+    public function resetSystem()
+    {
+        try {
+            // Hapus file signatures
+            $config = $this->loadConfig();
+
+            if (!empty($config['officers']['officer1']['signature'])) {
+                Storage::disk('public')->delete($config['officers']['officer1']['signature']);
+            }
+
+            if (!empty($config['officers']['officer2']['signature'])) {
+                Storage::disk('public')->delete($config['officers']['officer2']['signature']);
+            }
+
+            // Hapus file konfigurasi
+            if (File::exists($this->configPath)) {
+                File::delete($this->configPath);
+            }
+
+            // Clear config cache
+            Artisan::call('config:clear');
+
+            return redirect()->route('settings.system.index')
+                ->with('success', 'Pengaturan sistem telah direset ke default.');
+
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->with('error', 'Gagal mereset pengaturan: ' . $e->getMessage());
+        }
     }
 }

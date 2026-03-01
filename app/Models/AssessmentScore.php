@@ -13,32 +13,21 @@ class AssessmentScore extends Model
 
     protected $fillable = [
         'assessment_id',
-        'variabel_id',
         'aspect_id',
         'skor',
-        'bobot',
-        'skor_terbobot',
         'kategori',
         'catatan',
     ];
 
     protected $casts = [
-        'variabel_id' => 'integer',
         'aspect_id' => 'integer',
         'skor' => 'decimal:4',
-        'bobot' => 'decimal:4',
-        'skor_terbobot' => 'decimal:4',
     ];
 
     // Relationships
     public function assessment()
     {
         return $this->belongsTo(Assessment::class);
-    }
-
-    public function variabel()
-    {
-        return $this->belongsTo(AssessmentVariabel::class, 'variabel_id');
     }
 
     public function aspect()
@@ -72,13 +61,6 @@ class AssessmentScore extends Model
         if ($skor >= 21) return 'Tidak Baik';
         return 'Sangat Tidak Baik';
     }
-
-    // Scopes
-    public function scopeByVariabel($query, $variabelId)
-    {
-        return $query->where('variabel_id', $variabelId);
-    }
-
     public function scopeByAspect($query, $aspekId)
     {
         return $query->where('aspect_id', $aspekId);

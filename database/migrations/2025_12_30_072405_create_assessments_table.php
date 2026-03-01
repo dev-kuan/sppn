@@ -38,6 +38,7 @@ return new class extends Migration
             $table->decimal('skor_kemandirian', 10, 4)->nullable();
             $table->decimal('skor_sikap', 10, 4)->nullable();
             $table->decimal('skor_mental', 10, 4)->nullable();
+            $table->decimal('skor_komitmen', 10, 4)->nullable();
             $table->decimal('skor_total', 10, 4)->nullable();
             $table->enum('status', ['draf', 'disubmit', 'diterima', 'ditolak'])->default('draf');
             $table->text('catatan')->nullable();

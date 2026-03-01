@@ -223,6 +223,7 @@ calculateAll() {
         kemandirian: 0,
         sikap: 0,
         mental: 0,
+        komitmen: 0,
         total: 0
     };
 
@@ -269,7 +270,7 @@ calculateAll() {
     });
 
     // Total Score = jumlah seluruh variabel score
-    scores.total = scores.kepribadian + scores.kemandirian + scores.sikap + scores.mental;
+    scores.total = scores.kepribadian + scores.kemandirian + scores.sikap + scores.mental + scores.komitmen;
 
     console.log('\n Final Scores:', scores);
     return scores;
@@ -292,6 +293,7 @@ calculateAll() {
             else if (nama.includes('kemandirian')) variabelKey = 'kemandirian';
             else if (nama.includes('sikap'))       variabelKey = 'sikap';
             else if (nama.includes('mental'))      variabelKey = 'mental';
+            else if (nama.includes('komitmen'))    variabelKey = 'komitmen';
             else variabelKey = nama; // fallback
         }
 
