@@ -3,18 +3,48 @@
 namespace App\Services;
 
 use App\Models\Inmate;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class InmateService
 {
+    private function generateNoRegistrasi(): string
+    {
+        $monthYear = Carbon::now()->format('my'); // Contoh: 0326 untuk Maret 2026
+
+        // Ambil nomor registrasi terakhir bulan ini
+        $lastInmate = Inmate::whereYear('created_at', Carbon::now()->year)
+                           ->whereMonth('created_at', Carbon::now()->month)
+                           ->orderBy('no_registrasi', 'desc')
+                           ->first();
+
+        if ($lastInmate && preg_match('/REG-(\d{3})-' . $monthYear . '/', $lastInmate->no_registrasi, $matches)) {
+            $lastNumber = intval($matches[1]);
+            $newNumber = $lastNumber + 1;
+        } else {
+            $newNumber = 1;
+        }
+
+        return 'REG-' . str_pad($newNumber, 3, '0', STR_PAD_LEFT) . '-' . $monthYear;
+    }
+
+    /**
+     * Get nomor registrasi berikutnya (untuk preview di form)
+     */
+    public function getNextNoRegistrasi(): string
+    {
+        return $this->generateNoRegistrasi();
+    }
+
     public function storeInmate(array $data): Inmate
     {
         DB::beginTransaction();
-
         try {
-            $inmate = Inmate::create($data);
+            // Generate nomor registrasi otomatis
+            $data['no_registrasi'] = $this->generateNoRegistrasi();
 
+            $inmate = Inmate::create($data);
             $this->logInmateActivity($inmate, 'created');
 
             DB::commit();
@@ -25,7 +55,6 @@ class InmateService
             throw $e;
         }
     }
-
     public function updateInmate(Inmate $inmate, array $data):Inmate {
         DB::beginTransaction();
         try {

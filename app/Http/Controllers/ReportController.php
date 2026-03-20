@@ -4,9 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Exports\AssessmentExport;
 use App\Exports\InmateExport;
+use App\Helpers\ProgressChartGenerator;
 use App\Models\Assessment;
+use App\Models\AssessmentScore;
 use App\Models\AssessmentVariabel;
+use App\Models\DailyObservation;
 use App\Models\Inmate;
+use App\Models\ObservationItem;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -47,7 +51,6 @@ private $configPath;
             'inmate.crimeType',
             'creator',
             'approver',
-            'assessmentScores.variabel',
             'assessmentScores.aspect',
             'commitmentStatements',
             'commitmentRecommendations.recommender',
@@ -59,14 +62,20 @@ private $configPath;
             $q->aktif()->ordered();
         }])->get();
 
+        $daysInMonth = $assessment->tanggal_penilaian->daysInMonth;
+
          // Load institution data
         $institution = $this->getInstitutionData();
         $observationData = $this->getObservationData($assessment, $variabels);
+        $rekapData = $this->prepareRekapData($assessment);
+
 
         $pdf = Pdf::loadView('reports.assessment-pdf', [
             'assessment' => $assessment,
             'observationData' => $observationData,
             'institution' => $institution,
+            'daysInMonth' => $daysInMonth,
+            'rekapData' => $rekapData
         ]);
 
         $pdf->setPaper('a4', 'portrait');
@@ -134,13 +143,17 @@ private $configPath;
         if ($assessments->isEmpty()) {
             return back()->with('error', 'Tidak ada data penilaian pada periode tersebut.');
         }
-
         $progressData = $this->calculateProgressData($assessments);
+        $chartBase64 = ProgressChartGenerator::generate(
+            $progressData['total'],
+            $progressData['labels']
+        );
 
         $pdf = Pdf::loadView('reports.inmate-progress-pdf', [
             'inmate' => $inmate,
             'assessments' => $assessments,
             'progressData' => $progressData,
+            'chartBase64' => $chartBase64,
             'startDate' => Carbon::parse($validated['start_date']),
             'endDate' => Carbon::parse($validated['end_date']),
         ]);
@@ -302,6 +315,83 @@ private function getObservationData($assessment, $variabels)
     return $observationData;
 }
 
+private function prepareRekapData($assessment)
+    {
+        $variabels = AssessmentVariabel::with('aspect')->get();
+        $rekapData = [];
+
+        foreach ($variabels as $variabel) {
+            $variabelData = [
+                'nama' => $variabel->nama,
+                'aspects' => []
+            ];
+
+            foreach ($variabel->aspect as $aspek) {
+                // Get assessment score untuk aspek ini
+                $aspectScore = AssessmentScore::where('assessment_id', $assessment->id)
+                    ->where('aspect_id', $aspek->id)
+                    ->first();
+
+                // Hitung skor aspek dari observation items jika belum ada
+                if (!$aspectScore) {
+                    $aspectScore = $this->calculateAspectScore(
+    $assessment,
+    $variabel->id,
+    $aspek->id,
+    $variabel->key // atau field key kamu
+);
+                }
+
+                $variabelData['aspects'][] = [
+                    'nama' => $aspek->nama,
+                    'skor_aspek' => $aspectScore ? ($aspectScore->skor ?? 0) : 0,
+                    'kategori' => $aspectScore ? ($aspectScore->kategori ?? 0) : '-',
+                    'catatan' => $aspectScore ? ($aspectScore->catatan ?? '-') : '-'
+                ];
+            }
+
+            $rekapData[] = $variabelData;
+        }
+
+        return $rekapData;
+    }
+
+private function calculateAspectScore($assessment, $variabelId, $aspekId, $variabelKey)
+{
+    $items = ObservationItem::where('variabel_id', $variabelId)
+        ->where('aspect_id', $aspekId)
+        ->aktif()
+        ->get();
+
+    if ($items->isEmpty()) {
+        return null;
+    }
+
+    $totalScore = 0;
+    $itemCount = $items->count();
+
+    foreach ($items as $item) {
+        $checkedCount = DailyObservation::where('assessment_id', $assessment->id)
+            ->where('observation_item_id', $item->id)
+            ->where('is_checked', true)
+            ->count();
+
+        $frequency = $item->frekuensi;
+
+        if ($frequency > 0) {
+            $itemScore = (($checkedCount / $frequency) * $item->bobot) * (100 / $itemCount);
+            $totalScore += $itemScore;
+        }
+    }
+
+    return (object) [
+        'skor' => $totalScore,
+        'kategori' => $assessment->getKategoriFromScore($totalScore, $variabelKey),
+        'catatan' => '-'
+    ];
+}
+
+
     /**
      * Calculate monthly statistics
      */
@@ -377,6 +467,7 @@ private function getObservationData($assessment, $variabels)
     {
         return [
             'name' => config('institution.name', 'Lembaga Pemasyarakatan'),
+            'kategori_lapas' => config('institution.kategori_lapas', 'Lapas Medium Security'),
             'address' => config('institution.address', ''),
             'phone' => config('institution.phone', ''),
             'email' => config('institution.email', ''),

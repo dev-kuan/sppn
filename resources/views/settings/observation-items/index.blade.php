@@ -6,7 +6,7 @@
 @section('content')
 <div class="space-y-6">
     <!-- Header Actions -->
-    <div class="flex items-center justify-between">
+    <div class="flex items-center justify-between" x-data="{openConditionalModal: false}">
         <div class="flex space-x-3">
             <!-- Filter Variabel -->
             <select onchange="filterByVariabel(this.value)"
@@ -46,6 +46,17 @@
             </svg>
             Tambah Item
         </button>
+
+                <button @click="$dispatch('open-conditional-modal')"
+                   class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md shadow-sm hover:bg-indigo-700">
+                    Kondisional Item
+                </button>
+
+            <x-conditional-items-modal
+            :show="false"
+            :conditionalItems="$conditionalItems ?? []"
+            :tanggalPenilaian="$tanggalPenilaian ?? now()"
+        />
     </div>
 
     <!-- Table -->
@@ -135,6 +146,7 @@
         @endif
     </div>
 </div>
+
 
 <!-- Add Modal -->
 <x-modal name="add-item" maxWidth="2xl">

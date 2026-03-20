@@ -263,7 +263,7 @@
                     @elseif($assessment->status == 'ditolak')
                         <span class="status-badge status-ditolak">DITOLAK</span>
                     @else
-                        <span class="status-badge status-pending">PENDING</span>
+                        <span class="status-badge status-pending">MENUNGGU PERSETUJUAN</span>
                     @endif
                 </div>
             </div>

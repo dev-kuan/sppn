@@ -20,12 +20,15 @@
         .header {
             text-align: center;
             margin-bottom: 30px;
-            border-bottom: 2px solid black;
+            border: none;
             padding-bottom: 15px;
         }
 
+
+
         .logo {
-            border-bottom: 2px solid black;
+            border: none;
+            padding: none;
         }
 
         /* SECTION */
@@ -39,16 +42,61 @@
             padding: 6px;
             margin-bottom: 10px;
         }
-
-        .inmate-data {
+        .doc-header {
             width: 100%;
-            border-collapse: collapse;
         }
 
+        .inmate-data,
+        .inmate-header,{
+            width: 100%;
+            border: 1px solid black;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+
+        .inmate-header td,
         .inmate-data td,
-        th {
+        .inmate-data th,
+        .doc-header th {
             padding: 5px;
             vertical-align: middle;
+            border: 1px solid black;
+        }
+
+        .inmate-header {
+            border-bottom: none;
+        }
+
+        .label,
+        .header-label {
+            font-weight: bold;
+            width: 24%;
+        }
+
+
+        .header-colon {
+            width: 2%;
+            text-align: center;
+            white-space: nowrap;
+        }
+
+        .colon {
+            width: 2%;
+            text-align: center;
+        }
+
+        .value {
+            width: 25%;
+            text-transform: capitalize;
+        }
+
+        .right-label {
+            font-weight: bold;
+            width: 22%;
+        }
+
+        .right-value {
+            width: 25%;
         }
 
         .header {
@@ -67,34 +115,6 @@
             text-align: center;
             font-weight: bold;
             font-size: 13px;
-        }
-
-        .label {
-            font-weight: bold;
-            width: 18%;
-        }
-
-        .header-colon {
-            width: 1%;
-            text-align: left;
-        }
-        .colon {
-            width: 2%;
-            text-align: center;
-        }
-
-        .value {
-            width: 30%;
-            text-transform: capitalize;
-        }
-
-        .right-label {
-            font-weight: bold;
-            width: 22%;
-        }
-
-        .right-value {
-            width: 30%;
         }
 
 
@@ -180,19 +200,79 @@
             margin: -2;
             padding: -2;
         }
+
+        .result h3 {
+            margin: 0;
+            padding: 0;
+        }
+
+        .result .text-center {
+            text-align: center;
+        }
+
+        .result .text-right {
+            text-align: right;
+        }
+
+        .result .fw-bold {
+            font-weight: bold;
+        }
+
+        .result table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 12px;
+            border: 1px solid #000;
+        }
+
+        .result-data table,
+        .result-data th,
+        .result td,
+        .result-data td {
+            border: 1px solid #000;
+        }
+
+        .result th {
+            background: #f2f2f2;
+            font-weight: bold;
+            padding: 6px;
+        }
+
+        .result td {
+            padding: 6px;
+            vertical-align: top;
+        }
+
+        .result .no-border td {
+            border: none;
+            padding: 3px 0;
+        }
+
+        .result .section-title {
+            background: #e6e6e6;
+            padding: 6px;
+            font-weight: bold;
+            border: 1px solid #000;
+            margin-top: 10px;
+        }
+
+        .result .recommendation-box {
+            border: 1px solid #000;
+            padding: 8px;
+            margin-bottom: 8px;
+        }
     </style>
 </head>
 
 <body>
 
-    <table class="inmate-data">
-
-        <!-- HEADER INSTANSI -->
+    <!-- HEADER INSTANSI -->
+    <table class="doc-header">
         <tr>
-            <td class="logo">
+            <td class="logo" style="width: 80px; text-align: center; vertical-align: middle;">
                 <img src="{{ public_path('image066.png') }}" alt="logo">
             </td>
-            <td colspan="5" class="header">
+            <td colspan="5" class="header" style="padding-right: 80px; text-align: center; vertical-align: middle;">
                 DIREKTORAT JENDERAL PEMASYARAKATAN<br>
                 KEMENTERIAN HUKUM DAN HAK ASASI MANUSIA<br>
                 REPUBLIK INDONESIA
@@ -200,7 +280,7 @@
         </tr>
 
         <tr>
-            <td colspan="6" class="sub-header">
+            <td colspan="6" class="sub-header" style="text-align: center; vertical-align: middle;">
                 LEMBAR PENILAIAN PEMBINAAN NARAPIDANA<br>
                 LAPAS MEDIUM SECURITY
             </td>
@@ -211,25 +291,27 @@
                 DATA DEMOGRAFI NARAPIDANA
             </td>
         </tr>
+    </table>
+    <table class="inmate-header">
+        <tr>
+            <td class="header-label">Nama Narapidana</td>
+            <td class="header-colon">:</td>
+            <td colspan="4" class="header-value">{{ $assessment->inmate->nama }}</td>
+        </tr>
 
+        <tr>
+            <td class="header-label">Nama Lembaga Pemasyarakatan</td>
+            <td class="header-colon">:</td>
+            <td colspan="4" class="header-value">{{ $institution['name'] ?: 'Lapas' }}</td>
+        </tr>
+
+    </table>
+    <table class="inmate-data">
         <!-- DATA -->
-        <tr>
-            <td class="label" colspan="3">Nama Narapidana</td>
-            <td class="header-colon">:</td>
-            <td colspan="5" class="header-value">{{ $assessment->inmate->nama }}</td>
-        </tr>
-
-        <tr>
-            <td class="label" colspan="3">Nama Lembaga Pemasyarakatan</td>
-            <td class="header-colon">:</td>
-            <td colspan="5" class="header-value">LP KELAS III LEMBATA</td>
-        </tr>
-
         <tr>
             <td class="label">Jenis Kelamin</td>
             <td class="colon">:</td>
             <td class="value">{{ $assessment->inmate->jenis_kelamin }}</td>
-
 
             <td class="right-label">Tindak Pidana</td>
             <td class="colon">:</td>
@@ -293,6 +375,10 @@
             <td class="label">Pelatihan Keterampilan</td>
             <td class="colon">:</td>
             <td class="value">{{ $assessment->inmate->pelatihan ?? '-' }}</td>
+
+            <td></td>
+            <td></td>
+            <td></td>
         </tr>
 
         <!-- FOOTER DATA -->
@@ -312,9 +398,8 @@
     <div class="section">
         <div class="section-title">Hasil Observasi</div>
 
-        @foreach($observationData as $varIndex => $variabel)
-
-            @if($varIndex > 0)
+        @foreach ($observationData as $varIndex => $variabel)
+            @if ($varIndex > 0)
                 <div style="page-break-before: always;"></div>
             @endif
 
@@ -337,8 +422,7 @@
                 </thead>
 
                 <tbody>
-                    @foreach($variabel['aspects'] as $aspekIndex => $aspek)
-
+                    @foreach ($variabel['aspects'] as $aspekIndex => $aspek)
                         {{-- Baris Nama Aspek (colspan penuh) --}}
                         <tr style="background: #e6e6e6;">
                             <td colspan="6" style="font-weight: bold; padding: 6px 8px;">
@@ -347,7 +431,7 @@
                         </tr>
 
                         {{-- Baris item-item --}}
-                        @foreach($aspek['items'] as $itemIndex => $item)
+                        @foreach ($aspek['items'] as $itemIndex => $item)
                             <tr>
                                 <td style="text-align:center;">{{ $itemIndex + 1 }}</td>
                                 <td>{{ $item['nama_item'] }}</td>
@@ -357,7 +441,6 @@
                                 <td style="text-align:center;">{{ number_format($item['item_score'], 1) }}</td>
                             </tr>
                         @endforeach
-
                         {{-- Baris Skor Aspek --}}
                         <tr>
                             <td colspan="5" style="text-align:right; font-weight:bold; font-style:italic; padding-right: 10px;">
@@ -367,7 +450,6 @@
                                 {{ $aspek['skor_aspek'] }}
                             </td>
                         </tr>
-
                     @endforeach
 
                     {{-- Baris Skor Variabel --}}
@@ -381,27 +463,164 @@
                     </tr>
                 </tbody>
             </table>
-
         @endforeach
     </div>
-
+    {{--
     <!-- Pernyataan Komitmen -->
-    @if($assessment->commitmentStatements->isNotEmpty())
-        <div class="section">
-            <div class="section-title">Pernyataan Komitmen</div>
-            @foreach($assessment->commitmentStatements as $index => $statement)
-                <div class="commitment-box">
-                    <strong>{{ $index + 1 }}.</strong> {{ $statement->statement }}
+    @if ($assessment->commitmentStatements->isNotEmpty())
+    <div class="section">
+        <div class="section-title">Pernyataan Komitmen</div>
+        @foreach ($assessment->commitmentStatements as $index => $statement)
+        <div class="commitment-box">
+            <strong>{{ $index + 1 }}.</strong> {{ $statement->statement }}
+        </div>
+        @endforeach
+    </div>
+    @endif --}}
+    {{-- hasil Penilaian --}}
+    <!-- HEADER -->
+    <div style="page-break-before: always;"></div>
+    <div class="result">
+        <div class="text-center" style="margin-bottom:15px;">
+            <h3 class="fw-bold">HASIL PENILAIAN PEMBINAAN NARAPIDANA</h3>
+        </div>
+
+        <!-- DATA NARAPIDANA -->
+        <table style="margin-bottom:15px;">
+            <tr>
+                <td width="25%">Nama Narapidana</td>
+                <td width="2%">:</td>
+                <td>{{ $assessment->inmate->nama ?? '-' }}</td>
+
+                <td width="25%">Nama Lapas</td>
+                <td width="2%">:</td>
+                <td>{{ $institution['name'] ?: 'Lapas' }}</td>
+            </tr>
+            <tr>
+                <td>Jenis Kelamin</td>
+                <td>:</td>
+                <td>{{ $assessment->inmate->jenis_kelamin ?? '-' }}</td>
+
+                <td>Kategori Lapas</td>
+                <td>:</td>
+                <td>{{ $institution['kategori_lapas'] ?: 'Kategori Lapas' }}</td>
+            </tr>
+            <tr>
+                <td>Tindak Pidana</td>
+                <td>:</td>
+                <td>{{ $assessment->inmate->crimeType->nama ?? '-' }}</td>
+
+                <td>Bulan Penilaian</td>
+                <td>:</td>
+                <td>
+                    {{ optional($assessment->tanggal_penilaian)->translatedFormat('F Y') ?? '-' }}
+                </td>
+            </tr>
+            <tr>
+                <td>Lama Pidana</td>
+                <td>:</td>
+                <td>{{ $assessment->inmate->lama_pidana_bulan ?? 0 }} Bulan</td>
+
+                <td>Keterangan Lainnya</td>
+                <td>:</td>
+                <td> - </td>
+            </tr>
+        </table>
+
+        <!-- Assessment Result DATA -->
+        @foreach ($rekapData as $varIndex => $variabel)
+            {{-- @if ($varIndex > 0)
+            <div style="page-break-before: always;"></div>
+            @endif --}}
+
+            {{-- <div class="section-title">
+                {{ $variabel['nama'] }}
+            </div> --}}
+
+            <table class="result-data">
+                <thead>
+                    <tr>
+                        <th style="width:30%;">Variabel & Aspek</th>
+                        <th style="width:15%;">Skor</th>
+                        <th style="width:20%;">Kategori Skor</th>
+                        <th style="width:35%;">Catatan Skor</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr style="background: #e6e6e6;">
+                        <td style="font-weight: bold; padding: 6px 8px;">
+                            {{ $variabel['nama'] }}
+                        </td>
+
+                        @php
+                            $key = strtolower(collect(explode(' ', trim($variabel['nama'])))->filter()->last());
+                            $skorField = 'skor_' . $key;
+                            $kategoriField = 'kategori_' . $key;
+                        @endphp
+
+                        <td class="text-center">
+                            {{ number_format($assessment->$skorField ?? 0, 2) }}
+                        </td>
+
+                        <td class="text-center">
+                            {{ $assessment->$kategoriField ?? '-' }}
+                        </td>
+                        <td class="text-center">
+                            -
+                        </td>
+                    </tr>
+                    @foreach ($variabel['aspects'] as $aspekIndex => $aspek)
+                        <tr>
+                            <td>
+                                {{ $aspekIndex + 1 }}.
+                                {{ $aspek['nama'] }}
+                            </td>
+
+                            <td class="text-center">
+                                {{ number_format($aspek['skor_aspek'], 2, ',', '.') }}
+                            </td>
+
+                            <td class="text-center">
+                                {{ $aspek['kategori'] ?? '-' }}
+                            </td>
+
+                            <td>
+                                {{ $aspek['catatan'] ?? '-' }}
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        @endforeach
+
+        <!-- REKOMENDASI -->
+        @if ($assessment->commitmentRecommendations)
+            <div class="section-title">REKOMENDASI</div>
+
+            @foreach ($assessment->commitmentRecommendations as $index => $recommendation)
+                <div class="recommendation-box">
+                    <p>
+                        <strong>{{ $index + 1 }}.</strong>
+                        {{ $recommendation->recommendation }}
+                    </p>
+
+                    <p style="margin-top:6px; font-size:9pt;">
+                        <em>
+                            Oleh: {{ $recommendation->recommender->name ?? '-' }}
+                            ({{ $recommendation->created_at->format('d/m/Y H:i') }})
+                        </em>
+                    </p>
                 </div>
             @endforeach
-        </div>
-    @endif
+        @endif
+
+    </div>
 
     <!-- Rekomendasi -->
-    @if($assessment->commitmentRecommendations->isNotEmpty())
+    @if ($assessment->commitmentRecommendations)
         <div class="section">
             <div class="section-title">Rekomendasi</div>
-            @foreach($assessment->commitmentRecommendations as $index => $recommendation)
+            @foreach ($assessment->commitmentRecommendations as $index => $recommendation)
                 <div class="recommendation-box">
                     <p><strong>{{ $index + 1 }}.</strong> {{ $recommendation->recommendation }}</p>
                     <p style="margin-top: 8px; font-size: 9pt; color: #6b7280;">
@@ -413,22 +632,6 @@
         </div>
     @endif
 
-    <!-- Catatan -->
-    @if($assessment->catatan)
-        <div class="section">
-            <div class="section-title">Catatan</div>
-            <div style="padding: 12px; background-color: #f9fafb; border: 1px solid #e5e7eb; border-radius: 6px;">
-                {{ $assessment->catatan }}
-            </div>
-        </div>
-    @endif
-
-    <!-- CATATAN -->
-    <div class="section">
-        <div class="section-title">Catatan</div>
-        Perkembangan perilaku cukup baik dan menunjukkan peningkatan disiplin.
-    </div>
-
     <!-- TTD -->
     <div class="signature-section">
         <div style="display:table; width:100%;">
@@ -436,28 +639,34 @@
             <div class="signature-cell">
                 <p class="role">{{ $institution['officers']['officer1']['position'] ?: 'Pejabat 1' }},</p>
                 <div class="signature-line">
-                    @if(!empty($institution['officers']['officer1']['signature']) && file_exists($institution['officers']['officer1']['signature']))
-                    <img src="{{ $institution['officers']['officer1']['signature'] }}" width="240" height="240" alt="tdt"
-                        style="position: absolute; top: -32; left: -8;">
-                        @else
-            <div style="height: 60px;"></div>
-            @endif
+                    @if (
+                            !empty($institution['officers']['officer1']['signature']) &&
+                            file_exists($institution['officers']['officer1']['signature'])
+                        )
+                        <img src="{{ $institution['officers']['officer1']['signature'] }}" width="240" height="240"
+                            alt="tdt" style="position: absolute; top: -32; left: -8;">
+                    @else
+                        <div style="height: 60px;"></div>
+                    @endif
                     <p class="name">{{ $institution['officers']['officer1']['name'] ?: '-' }}</p>
                     <span class="nip">{{ $institution['officers']['officer1']['nip'] ?: '-' }}</span>
                 </div>
             </div>
 
             <div class="signature-cell">
-                <p class="role">{{ $institution['officers']['officer1']['position'] ?: 'Pejabat 1' }},,</p>
+                <p class="role">{{ $institution['officers']['officer2']['position'] ?: 'Pejabat 1' }},,</p>
                 <div class="signature-line">
-                     @if(!empty($institution['officers']['officer1']['signature']) && file_exists($institution['officers']['officer1']['signature']))
-                    <img src="{{ $institution['officers']['officer1']['signature'] }}" width="110" height="110" alt="tdt"
-                        style="position: absolute; top: 20; left:80">
-                        @else
+                    @if (
+                            !empty($institution['officers']['officer2']['signature']) &&
+                            file_exists($institution['officers']['officer2']['signature'])
+                        )
+                        <img src="{{ $institution['officers']['officer2']['signature'] }}" width="110" height="110"
+                            alt="tdt" style="position: absolute; top: 20; left:80">
+                    @else
                         <div style="height: 60px;"></div>
-            @endif
-                    <p class="name">{{ $institution['officers']['officer1']['name'] ?: '-' }}</p>
-                    <span class="nip">{{ $institution['officers']['officer1']['nip'] ?: '-' }}</sp>
+                    @endif
+                    <p class="name">{{ $institution['officers']['officer2']['name'] ?: '-' }}</p>
+                    <span class="nip">{{ $institution['officers']['officer2']['nip'] ?: '-' }}</sp>
                 </div>
             </div>
 

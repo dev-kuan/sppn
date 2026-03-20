@@ -145,7 +145,6 @@ class AssessmentController extends Controller
             'inmate.crimeType',
             'creator',
             'approver',
-            'assessmentScores.variabel',
             'assessmentScores.aspect',
             'commitmentStatements',
             'commitmentRecommendations.recommender',
@@ -237,7 +236,7 @@ class AssessmentController extends Controller
                 ->with('error', 'Penilaian yang sudah disubmit tidak dapat diedit.');
         }
 
-        $assessment->load('inmate', 'dailyObservations');
+        $assessment->load('inmate', 'dailyObservations', 'commitmentRecommendations');
 
         // Get observation structure
         $variabels = AssessmentVariabel::with(['aspect.observationItems' => function ($q) {
@@ -388,6 +387,37 @@ class AssessmentController extends Controller
             ], 500);
         }
     }
+    public function updateRecommendation(Request $request, Assessment $assessment)
+    {
+        $validated = $request->validate([
+            'deskripsi' => 'required|string|max:1000',
+            'layak_dapat_hak' => 'required|',
+        ]);
+
+        try {
+            $assessmentRecommendation = $this->assessmentService->updateRecommendation(
+                $assessment,
+                $validated['deskripsi'],
+                $validated['layak_dapat_hak']
+            );
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Catatan rekomendasi berhasil disimpan',
+                'data' => $assessmentRecommendation,
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('Catatan rekomendasi gagal disimpan: ', [
+                'assessment_id' => $assessment->id,
+                'error' => $e->getMessage()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan saat menyimpan catatan rekomendasi',
+            ], 500);
+        }
+    }
     public function submit(Assessment $assessment)
     {
         // $this->authorize('submit-penilaian');
@@ -451,7 +481,7 @@ class AssessmentController extends Controller
 
         try {
             $fileName = 'Template_Penilaian_' .
-                $assessment->inmate->no_registrasi . '_' .
+                $assessment->inmate->nama . '_' .
                 $assessment->tanggal_penilaian->format('d-m-Y') . '.xlsx';
 
             return Excel::download(

@@ -22,7 +22,7 @@ class StoreInmateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'no_registrasi' => 'required|string|max:255|unique:inmates,no_registrasi',
+            // 'no_registrasi' => 'required|string|max:255|unique:inmates,no_registrasi',
             'nama' => 'required|string|max:255',
             'tempat_lahir' => 'required|string|max:255',
             'tanggal_lahir' => 'required|date|before:today',

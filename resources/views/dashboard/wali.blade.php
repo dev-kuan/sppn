@@ -122,7 +122,7 @@
                 <p class="text-3xl font-bold text-green-600">{{ $monthlyStats['completed'] }}</p>
             </div>
             <div class="text-center p-4 bg-yellow-50 rounded-lg">
-                <p class="text-sm text-yellow-600">Pending</p>
+                <p class="text-sm text-yellow-600">Menunggu</p>
                 <p class="text-3xl font-bold text-yellow-600">{{ $monthlyStats['pending'] }}</p>
             </div>
             <div class="text-center p-4 bg-gray-50 rounded-lg">

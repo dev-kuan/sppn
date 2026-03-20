@@ -82,7 +82,6 @@
                         Reset
                     </a>
                 </div>
-
                 @can('create-penilaian')
                 <a href="{{ route('assessments.create') }}"
                    class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md shadow-sm hover:bg-indigo-700">
@@ -115,7 +114,7 @@
 
     <div class="overflow-hidden bg-white rounded-lg shadow">
         <div class="px-4 py-5 sm:p-6">
-            <dt class="text-sm font-medium text-gray-500 truncate">Pending Approval</dt>
+            <dt class="text-sm font-medium text-gray-500 truncate">Menunggu Persetujuan</dt>
             <dd class="mt-1 text-3xl font-semibold text-yellow-600">{{ $assessments->where('status', 'disubmit')->count() }}</dd>
         </div>
     </div>
@@ -141,7 +140,7 @@
                         Waktu Penilaian
                     </th>
                     <th class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
-                        Skor Total
+                        Skor
                     </th>
                     <th class="px-6 py-3 text-xs font-medium tracking-wider text-left text-gray-500 uppercase">
                         Kategori
@@ -171,11 +170,13 @@
                     <td class="px-6 py-4 text-sm text-gray-900 whitespace-nowrap">
                         {{ $assessment->tanggal_penilaian->translatedFormat('d F Y') }}
                     </td>
-                    <td class="px-6 py-4 whitespace-nowrap">
-                        <div class="text-sm font-semibold text-gray-900">{{ number_format($assessment->skor_total ?? 0, 2) }}</div>
+                    <td class="px-6 py-4 whitespace-wrap">
+                        {{-- <div class="text-sm font-semibold text-gray-900">{{ number_format($assessment->skor_total ?? 0, 2) }}</div> --}}
                         <div class="text-xs text-gray-500">
-                            K: {{ number_format($assessment->skor_kepribadian ?? 0, 1) }} |
-                            M: {{ number_format($assessment->skor_kemandirian ?? 0, 1) }}
+                            KP: {{ number_format($assessment->skor_kepribadian ?? 0, 1) }} |
+                            MD: {{ number_format($assessment->skor_kemandirian ?? 0, 1) }} |
+                            KM: {{ number_format($assessment->skor_mental ?? 0, 1) }} |
+                            SK: {{ number_format($assessment->skor_sikap ?? 0, 1) }} |
                         </div>
                     </td>
                     <td class="px-6 py-4 text-sm text-gray-900 whitespace-nowrap">

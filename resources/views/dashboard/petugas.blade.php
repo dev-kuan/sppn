@@ -95,7 +95,7 @@
 <!-- Monthly Progress -->
 <div class="bg-white shadow rounded-lg mb-6">
     <div class="px-6 py-4 border-b border-gray-200">
-        <h3 class="text-lg font-medium text-gray-900">Progress Bulan Ini</h3>
+        <h3 class="text-lg font-medium text-gray-900">Progress Bulan Ini dari Petugas Input</h3>
     </div>
     <div class="p-6">
         <div class="grid grid-cols-1 gap-6 sm:grid-cols-4">
@@ -104,15 +104,15 @@
                 <p class="text-3xl font-bold text-gray-900">{{ $monthlyProgress->total ?? 0 }}</p>
             </div>
             <div class="text-center">
-                <p class="text-sm text-gray-500">Draft</p>
+                <p class="text-sm text-gray-500">Draf</p>
                 <p class="text-3xl font-bold text-yellow-600">{{ $monthlyProgress->draft ?? 0 }}</p>
             </div>
             <div class="text-center">
-                <p class="text-sm text-gray-500">Submitted</p>
+                <p class="text-sm text-gray-500">Dikirim</p>
                 <p class="text-3xl font-bold text-blue-600">{{ $monthlyProgress->submitted ?? 0 }}</p>
             </div>
             <div class="text-center">
-                <p class="text-sm text-gray-500">Approved</p>
+                <p class="text-sm text-gray-500">Diterima</p>
                 <p class="text-3xl font-bold text-green-600">{{ $monthlyProgress->approved ?? 0 }}</p>
             </div>
         </div>
@@ -123,7 +123,7 @@
 @if($drafts->count() > 0)
 <div class="bg-white shadow rounded-lg mb-6">
     <div class="px-6 py-4 border-b border-gray-200">
-        <h3 class="text-lg font-medium text-gray-900">Penilaian Draft yang Perlu Diselesaikan</h3>
+        <h3 class="text-lg font-medium text-gray-900">Penilaian Draf yang Perlu Diselesaikan</h3>
     </div>
     <div class="overflow-x-auto">
         <table class="min-w-full divide-y divide-gray-200">
@@ -190,6 +190,7 @@
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Narapidana</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Periode</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Penilai</th>
                     <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Update Terakhir</th>
                     <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Aksi</th>
                 </tr>
@@ -205,12 +206,15 @@
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap">
                         <x-status-badge :status="$assessment->status" />
-                    </td>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {{ $assessment->creator->name }}
+                        </td>
                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {{ $assessment->updated_at->diffForHumans() }}
                     </td>
                     <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        @if(in_array($assessment->status, ['draf', 'ditolak']))
+                        @if(in_array($assessment->status, ['draf', 'ditolak']) && $assessment->creator->name === Auth::user())
                         <a href="{{ route('assessments.edit', $assessment) }}" class="text-indigo-600 hover:text-indigo-900 mr-3">
                             Edit
                         </a>

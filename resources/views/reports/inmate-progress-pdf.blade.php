@@ -2,534 +2,442 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Laporan Progress - {{ $inmate->full_name }}</title>
     <style>
         @page {
             margin: 2cm 1.5cm;
         }
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+
         body {
-            font-family: 'DejaVu Sans', Arial, sans-serif;
-            font-size: 10pt;
-            line-height: 1.4;
-            color: #333;
+            font-family: DejaVu Sans, Arial, sans-serif;
+            font-size: 11px;
+            color: black;
         }
-        .header {
-            text-align: center;
-            margin-bottom: 25px;
-            padding-bottom: 15px;
-            border-bottom: 3px solid #2563eb;
+
+        .doc-header th {
+            padding: 5px;
+            vertical-align: middle;
+            border: 1px solid black;
         }
-        .header h1 {
-            font-size: 18pt;
-            font-weight: bold;
-            color: #1e40af;
-            margin-bottom: 5px;
+         .logo {
+            border: none;
+            padding: none;
         }
-        .header h2 {
-            font-size: 14pt;
-            color: #4b5563;
-            margin-bottom: 3px;
-        }
-        .header p {
-            font-size: 9pt;
-            color: #6b7280;
-        }
-        .profile-section {
-            background: linear-gradient(135deg, #eff6ff 0%, #ffffff 100%);
-            border: 2px solid #3b82f6;
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 20px;
-        }
-        .profile-grid {
-            display: table;
+                .doc-header {
             width: 100%;
         }
-        .profile-row {
-            display: table-row;
-        }
-        .profile-label {
-            display: table-cell;
-            width: 30%;
-            padding: 5px 10px;
-            font-weight: 600;
-            color: #374151;
-        }
-        .profile-value {
-            display: table-cell;
-            padding: 5px 10px;
-            color: #1f2937;
-        }
+
         .section-title {
-            font-size: 12pt;
-            font-weight: bold;
-            color: #1e40af;
-            margin: 20px 0 12px 0;
-            padding: 8px 12px;
-            background-color: #dbeafe;
-            border-left: 4px solid #2563eb;
-        }
-        .summary-cards {
-            display: table;
-            width: 100%;
-            margin-bottom: 20px;
-        }
-        .summary-row {
-            display: table-row;
-        }
-        .summary-card {
-            display: table-cell;
-            width: 33.33%;
-            padding: 15px;
             text-align: center;
-            border: 2px solid #e5e7eb;
-            background-color: #f9fafb;
-        }
-        .summary-card.success {
-            border-color: #10b981;
-            background: linear-gradient(135deg, #d1fae5 0%, #ecfdf5 100%);
-        }
-        .summary-card.warning {
-            border-color: #f59e0b;
-            background: linear-gradient(135deg, #fef3c7 0%, #fffbeb 100%);
-        }
-        .summary-card.info {
-            border-color: #3b82f6;
-            background: linear-gradient(135deg, #dbeafe 0%, #eff6ff 100%);
-        }
-        .card-label {
-            font-size: 8pt;
-            color: #6b7280;
-            font-weight: 600;
-            text-transform: uppercase;
-            margin-bottom: 8px;
-        }
-        .card-value {
-            font-size: 22pt;
             font-weight: bold;
-            color: #1e40af;
+            font-size: 13px;
         }
-        .card-subtitle {
-            font-size: 8pt;
-            color: #6b7280;
-            margin-top: 4px;
+
+        /* ---- KOP SURAT ---- */
+        .kop-table  { display: table; width: 100%; }
+        .kop-row    { display: table-row; }
+        .kop-logo   { display: table-cell; width: 75px; vertical-align: middle; text-align: center; }
+        .kop-logo-circle {
+            width: 60px; height: 60px;
+            border: 2px solid #111111; border-radius: 50%;
+            display: inline-block; line-height: 56px;
+            text-align: center; font-size: 7pt; font-weight: bold;
         }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 15px;
+        .kop-text  { display: table-cell; vertical-align: middle; text-align: center; }
+        .kop-space { display: table-cell; width: 75px; }
+        .kop-induk { font-size: 9pt; text-transform: uppercase; letter-spacing: 0.3px; }
+        .kop-nama  { font-size: 14pt; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; margin: 3px 0; }
+        .kop-alamat{ font-size: 7.5pt; color: #444444; }
+        .kop-border{ border-bottom: 3px double #111111; padding-bottom: 10px; margin-bottom: 14px; }
+
+        /* ---- JUDUL ---- */
+        .judul { text-align: center; margin: 14px 0 12px; }
+        .judul h1 { font-size: 11.5pt; font-weight: bold; text-transform: uppercase; text-decoration: underline; }
+        .judul p  { font-size: 9pt; margin-top: 4px; color: #333; }
+
+        /* ---- SECTION BOX ---- */
+        .box        { border: 1px solid #aaaaaa; margin-bottom: 11px; }
+        .box-head   { background: #e8e8e8; border-bottom: 1px solid #aaaaaa; padding: 5px 10px;
+                      font-size: 9pt; font-weight: bold; text-transform: uppercase; letter-spacing: 0.3px; }
+        .box-body   { padding: 8px 12px; }
+
+        /* ---- IDENTITAS ---- */
+        .id-tbl  { display: table; width: 100%; }
+        .id-row  { display: table-row; }
+        .id-lbl  { display: table-cell; width: 34%; padding: 2.5px 5px; font-size: 9pt; font-weight: bold; vertical-align: top; }
+        .id-sep  { display: table-cell; width: 3%; padding: 2.5px 2px; font-size: 9pt; }
+        .id-val  { display: table-cell; padding: 2.5px 5px; font-size: 9pt; }
+
+        /* ---- STATISTIK ---- */
+        .stat-tbl  { display: table; width: 100%; border-collapse: collapse; }
+        .stat-row  { display: table-row; }
+        .stat-cell { display: table-cell; width: 33.33%; border: 1px solid #aaaaaa;
+                     text-align: center; padding: 10px 6px; vertical-align: middle; background: #f7f7f7; }
+        .stat-cell + .stat-cell { border-left: none; }
+        .stat-cell.alt { background: #efefef; }
+        .stat-lbl  { font-size: 7.5pt; font-weight: bold; text-transform: uppercase; letter-spacing: 0.3px; margin-bottom: 5px; color: #444; }
+        .stat-val  { font-size: 20pt; font-weight: bold; }
+        .stat-sub  { font-size: 7.5pt; margin-top: 3px; color: #555; }
+
+        /* ---- SECTION DIVIDER ---- */
+        .sec-title {
+            font-size: 9.5pt; font-weight: bold; text-transform: uppercase;
+            padding: 5px 10px; margin: 13px 0 8px;
+            background: #d8d8d8;
+            border-left: 4px solid #111111;
+            border-top: 1px solid #aaaaaa;
+            border-bottom: 1px solid #aaaaaa;
         }
-        th {
-            background-color: #1e40af;
-            color: white;
-            padding: 10px 8px;
-            text-align: left;
-            font-weight: 600;
-            font-size: 9pt;
+        /* ---- TABEL DATA ---- */
+        table.dt { width: 100%; border-collapse: collapse; margin-bottom: 11px; }
+        table.dt th {
+            background: #d0d0d0; color: #111; padding: 6px 5px;
+            text-align: center; font-size: 8pt; border: 1px solid #888;
         }
-        td {
-            padding: 8px;
-            border: 1px solid #e5e7eb;
-            font-size: 9pt;
-        }
-        tr:nth-child(even) {
-            background-color: #f9fafb;
-        }
-        .progress-bar-container {
-            width: 100%;
-            height: 20px;
-            background-color: #e5e7eb;
-            border-radius: 10px;
-            overflow: hidden;
-        }
-        .progress-bar {
-            height: 100%;
-            background: linear-gradient(90deg, #3b82f6 0%, #1e40af 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 8pt;
-            font-weight: 600;
-        }
-        .trend-indicator {
-            display: inline-block;
-            padding: 3px 8px;
-            border-radius: 10px;
-            font-size: 8pt;
-            font-weight: 600;
-        }
-        .trend-up {
-            background-color: #d1fae5;
-            color: #065f46;
-        }
-        .trend-down {
-            background-color: #fee2e2;
-            color: #991b1b;
-        }
-        .trend-stable {
-            background-color: #fef3c7;
-            color: #92400e;
-        }
-        .chart-placeholder {
-            background-color: #f3f4f6;
-            border: 2px dashed #9ca3af;
-            padding: 80px 20px;
-            text-align: center;
-            color: #6b7280;
-            margin: 15px 0;
-            border-radius: 8px;
-        }
-        .insight-box {
-            background-color: #eff6ff;
-            border-left: 4px solid #3b82f6;
-            padding: 12px 15px;
-            margin: 15px 0;
-            border-radius: 4px;
-        }
-        .insight-box h4 {
-            color: #1e40af;
-            font-size: 10pt;
-            margin-bottom: 8px;
-        }
-        .insight-box ul {
-            margin-left: 20px;
-            line-height: 1.6;
-        }
-        .recommendation-box {
-            background-color: #fef3c7;
-            border: 2px solid #f59e0b;
-            border-radius: 8px;
-            padding: 15px;
-            margin: 15px 0;
-        }
-        .recommendation-box h4 {
-            color: #92400e;
-            font-size: 11pt;
-            margin-bottom: 10px;
-        }
+        table.dt td { padding: 5px 6px; border: 1px solid #bbbbbb; font-size: 8.5pt; vertical-align: middle; }
+        table.dt tr:nth-child(even) td { background: #f4f4f4; }
+
+        /* ---- PROGRESS BAR ---- */
+        .pb-wrap { width: 100%; height: 13px; background: #dddddd; border: 1px solid #aaaaaa; overflow: hidden; }
+        .pb-fill  { height: 100%; background: #555555; text-align: center; line-height: 13px;
+                    color: #fff; font-size: 7pt; font-weight: bold; }
+
+        /* ---- TREND BADGE ---- */
+        .badge { display: inline-block; padding: 2px 6px; border: 1px solid #999; font-size: 7.5pt;
+                 font-weight: bold; background: #f0f0f0; }
+
+        /* ---- ANALISIS ---- */
+        .an-box   { border: 1px solid #aaaaaa; margin-bottom: 8px; }
+        .an-head  { background: #e0e0e0; border-bottom: 1px solid #aaaaaa; padding: 4px 10px;
+                    font-size: 8.5pt; font-weight: bold; }
+        .an-body  { padding: 7px 12px; font-size: 9pt; }
+        .an-body ul { margin-left: 16px; line-height: 1.8; }
+
+        /* ---- REKOMENDASI ---- */
+        .rek-box  { border: 1.5px solid #888; margin-bottom: 13px; background: #f9f9f9; }
+        .rek-head { background: #cccccc; border-bottom: 1px solid #888; padding: 5px 10px;
+                    font-size: 9.5pt; font-weight: bold; text-transform: uppercase; }
+        .rek-body { padding: 9px 13px; font-size: 9pt; }
+        .rek-body ul { margin-left: 16px; line-height: 1.9; }
+
+        /* ---- CATATAN ---- */
+        .catatan { margin-top: 16px; border-top: 1px solid #bbbbbb; padding-top: 7px;
+                   font-size: 8pt; color: #555; line-height: 1.5; }
+
+        /* ---- TANDA TANGAN ---- */
+        .ttd-tbl  { display: table; width: 100%; margin-top: 32px; }
+        .ttd-row  { display: table-row; }
+        .ttd-cell { display: table-cell; width: 50%; text-align: center; padding: 0 15px; }
+        .ttd-pos  { font-size: 9pt; margin-bottom: 50px; }
+        .ttd-nama { font-size: 9pt; font-weight: bold; border-top: 1px solid #111; padding-top: 4px; }
+        .ttd-nip  { font-size: 8.5pt; }
+
+        /* ---- FOOTER ---- */
         .footer {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            text-align: center;
-            font-size: 8pt;
-            color: #6b7280;
-            padding: 10px;
-            border-top: 1px solid #e5e7eb;
+            position: fixed; bottom: 0; left: 0; right: 0;
+            border-top: 1px solid #aaaaaa; padding: 4px 20px;
+            background: #ffffff; display: table; width: 100%;
         }
-        .page-break {
-            page-break-after: always;
-        }
+        .f-l { display: table-cell; text-align: left;   font-size: 7.5pt; color: #555; }
+        .f-c { display: table-cell; text-align: center;  font-size: 7.5pt; color: #555; }
+        .f-r { display: table-cell; text-align: right;   font-size: 7.5pt; color: #555; }
+
+        .page-break { page-break-after: always; }
     </style>
 </head>
 <body>
-    <!-- Header -->
-    <div class="header">
-        <h1>LAPORAN PROGRESS NARAPIDANA</h1>
-        <h2>LEMBAGA PEMASYARAKATAN</h2>
-        <p>Periode: {{ $startDate->format('d F Y') }} - {{ $endDate->format('d F Y') }}</p>
-    </div>
 
-    <!-- Profile Narapidana -->
-    <div class="profile-section">
-        <h3 style="color: #1e40af; margin-bottom: 10px; font-size: 12pt;">Data Narapidana</h3>
-        <div class="profile-grid">
-            <div class="profile-row">
-                <div class="profile-label">Nomor Registrasi</div>
-                <div class="profile-value">{{ $inmate->registration_number }}</div>
-            </div>
-            <div class="profile-row">
-                <div class="profile-label">Nama Lengkap</div>
-                <div class="profile-value">{{ $inmate->full_name }}</div>
-            </div>
-            <div class="profile-row">
-                <div class="profile-label">NIK</div>
-                <div class="profile-value">{{ $inmate->nik ?? '-' }}</div>
-            </div>
-            <div class="profile-row">
-                <div class="profile-label">Tempat, Tanggal Lahir</div>
-                <div class="profile-value">
-                    {{ $inmate->place_of_birth ?? '-' }},
-                    {{ $inmate->date_of_birth?->format('d F Y') ?? '-' }}
-                    ({{ $inmate->date_of_birth?->age ?? '-' }} tahun)
-                </div>
-            </div>
-            <div class="profile-row">
-                <div class="profile-label">Pendidikan</div>
-                <div class="profile-value">{{ $inmate->education ?? '-' }}</div>
-            </div>
-            <div class="profile-row">
-                <div class="profile-label">Kasus</div>
-                <div class="profile-value">{{ $inmate->case_description }}</div>
-            </div>
-            <div class="profile-row">
-                <div class="profile-label">Tanggal Masuk</div>
-                <div class="profile-value">{{ $inmate->entry_date?->format('d F Y') ?? '-' }}</div>
-            </div>
-            <div class="profile-row">
-                <div class="profile-label">Blok/Sel</div>
-                <div class="profile-value">{{ $inmate->block_cell ?? '-' }}</div>
-            </div>
-        </div>
-    </div>
+<!-- ===================== KOP SURAT ===================== -->
+    <!-- HEADER INSTANSI -->
+    <table class="doc-header">
+        <tr>
+            <td class="logo" style="width: 80px; text-align: center; vertical-align: middle;">
+                <img src="{{ public_path('image066.png') }}" alt="logo">
+            </td>
+            <td colspan="5" class="header" style="padding-right: 80px; text-align: center; vertical-align: middle;">
+                DIREKTORAT JENDERAL PEMASYARAKATAN<br>
+                KEMENTERIAN HUKUM DAN HAK ASASI MANUSIA<br>
+                REPUBLIK INDONESIA
+            </td>
+        </tr>
 
-    <!-- Summary Cards -->
-    <div class="summary-cards">
-        <div class="summary-row">
-            <div class="summary-card info">
-                <div class="card-label">Total Penilaian</div>
-                <div class="card-value">{{ $assessments->count() }}</div>
-                <div class="card-subtitle">penilaian</div>
-            </div>
-            <div class="summary-card {{ $progressData['trend'] == 'naik' ? 'success' : ($progressData['trend'] == 'turun' ? 'warning' : 'info') }}">
-                <div class="card-label">Skor Rata-rata Total</div>
-                <div class="card-value">{{ number_format(collect($progressData['total'])->avg(), 1) }}</div>
-                <div class="card-subtitle">dari 100</div>
-            </div>
-            <div class="summary-card {{ $progressData['trend'] == 'naik' ? 'success' : ($progressData['trend'] == 'turun' ? 'warning' : 'info') }}">
-                <div class="card-label">Trend</div>
-                <div class="card-value" style="font-size: 16pt;">
-                    @if($progressData['trend'] == 'naik')
-                        ↑ Naik
-                    @elseif($progressData['trend'] == 'turun')
-                        ↓ Turun
-                    @else
-                        → Stabil
-                    @endif
-                </div>
-                <div class="card-subtitle">
-                    {{ ucfirst($progressData['trend']) }}
-                </div>
-            </div>
-        </div>
-    </div>
+        <tr>
+            <td colspan="6" class="sub-header" style="text-align: center; vertical-align: middle;">
+                LEMBAR PENILAIAN PEMBINAAN NARAPIDANA<br>
+                LAPAS MEDIUM SECURITY
+            </td>
+        </tr>
 
-    <!-- Grafik Progress -->
-    <div class="section-title">Grafik Perkembangan Skor</div>
-    <div class="chart-placeholder">
-        <svg width="100%" height="200" style="max-width: 800px; margin: 0 auto;">
-            @php
-                $maxScore = 100;
-                $width = 700;
-                $height = 180;
-                $padding = 40;
-                $chartWidth = $width - (2 * $padding);
-                $chartHeight = $height - (2 * $padding);
-                $count = count($progressData['total']);
-                $step = $count > 1 ? $chartWidth / ($count - 1) : 0;
-            @endphp
-
-            <!-- Grid lines -->
-            @for($i = 0; $i <= 5; $i++)
-                @php $y = $padding + ($chartHeight * $i / 5); @endphp
-                <line x1="{{ $padding }}" y1="{{ $y }}" x2="{{ $width - $padding }}" y2="{{ $y }}"
-                      stroke="#e5e7eb" stroke-width="1"/>
-                <text x="{{ $padding - 10 }}" y="{{ $y + 4 }}" text-anchor="end" font-size="8" fill="#6b7280">
-                    {{ 100 - ($i * 20) }}
-                </text>
-            @endfor
-
-            <!-- Data line -->
-            @if($count > 1)
-            @php
-                $points = [];
-                foreach($progressData['total'] as $index => $score) {
-                    $x = $padding + ($step * $index);
-                    $y = $padding + ($chartHeight * (1 - ($score / $maxScore)));
-                    $points[] = "$x,$y";
-                }
-                $pointsStr = implode(' ', $points);
-            @endphp
-            <polyline points="{{ $pointsStr }}" fill="none" stroke="#3b82f6" stroke-width="3"/>
-
-            <!-- Data points -->
-            @foreach($progressData['total'] as $index => $score)
-                @php
-                    $x = $padding + ($step * $index);
-                    $y = $padding + ($chartHeight * (1 - ($score / $maxScore)));
-                @endphp
-                <circle cx="{{ $x }}" cy="{{ $y }}" r="4" fill="#1e40af"/>
-                <text x="{{ $x }}" y="{{ $height - 10 }}" text-anchor="middle" font-size="7" fill="#6b7280">
-                    {{ $progressData['labels'][$index] ?? '' }}
-                </text>
-            @endforeach
-            @endif
-        </svg>
-    </div>
-
-    <!-- Riwayat Penilaian -->
-    <div class="section-title">Riwayat Penilaian Detail</div>
-    <table>
-        <thead>
-            <tr>
-                <th style="width: 5%;">No</th>
-                <th style="width: 15%;">Tanggal</th>
-                <th style="width: 12%;">Periode</th>
-                <th style="width: 10%;">Skor</th>
-                <th style="width: 15%;">Progress Bar</th>
-                <th style="width: 10%;">Trend</th>
-                <th style="width: 18%;">Penilai</th>
-                <th style="width: 15%;">Status</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach($assessments as $index => $assessment)
-            @php
-                $prevAssessment = $index > 0 ? $assessments[$index - 1] : null;
-                $trend = 'stable';
-                $trendValue = 0;
-                if ($prevAssessment) {
-                    $trendValue = ($assessment->skor_total ?? 0) - ($prevAssessment->skor_total ?? 0);
-                    if ($trendValue > 2) $trend = 'up';
-                    elseif ($trendValue < -2) $trend = 'down';
-                }
-            @endphp
-            <tr>
-                <td style="text-align: center;">{{ $index + 1 }}</td>
-                <td>{{ $assessment->tanggal_penilaian->format('d F Y') }}</td>
-                <td>{{ $assessment->periode ?? '-' }}</td>
-                <td style="text-align: center; font-weight: 600;">
-                    {{ number_format($assessment->skor_total ?? 0, 1) }}
-                </td>
-                <td>
-                    <div class="progress-bar-container">
-                        <div class="progress-bar" style="width: {{ $assessment->skor_total ?? 0 }}%;">
-                            {{ number_format($assessment->skor_total ?? 0, 0) }}%
-                        </div>
-                    </div>
-                </td>
-                <td style="text-align: center;">
-                    @if($index > 0)
-                        <span class="trend-indicator trend-{{ $trend }}">
-                            @if($trend == 'up')
-                                ↑ +{{ number_format($trendValue, 1) }}
-                            @elseif($trend == 'down')
-                                ↓ {{ number_format($trendValue, 1) }}
-                            @else
-                                → 0
-                            @endif
-                        </span>
-                    @else
-                        <span class="trend-indicator trend-stable">Awal</span>
-                    @endif
-                </td>
-                <td>{{ $assessment->creator->name }}</td>
-                <td>
-                    @if($assessment->status == 'diterima')
-                        <span style="color: #065f46; font-weight: 600;">✓ Diterima</span>
-                    @else
-                        <span style="color: #92400e;">⚠ {{ ucfirst($assessment->status) }}</span>
-                    @endif
-                </td>
-            </tr>
-            @endforeach
-        </tbody>
+        <tr>
+            <td colspan="6" class="section-title">
+                DATA DEMOGRAFI NARAPIDANA
+            </td>
+        </tr>
     </table>
 
-    <!-- Analisis dan Insight -->
-    <div class="page-break"></div>
-    <div class="section-title">Analisis dan Insight</div>
+<!-- ===================== JUDUL ===================== -->
+<div class="judul">
+    <h1>Laporan Progress Pembinaan Narapidana</h1>
+    <p>Periode: {{ $startDate->format('d F Y') }} s.d. {{ $endDate->format('d F Y') }}</p>
+</div>
 
-    <div class="insight-box">
-        <h4>📊 Ringkasan Statistik</h4>
+<!-- ===================== I. IDENTITAS ===================== -->
+<div class="box">
+    <div class="box-head">I. Identitas Narapidana</div>
+    <div class="box-body">
+        <div class="id-tbl">
+            <div class="id-row">
+                <div class="id-lbl">Nomor Registrasi</div>
+                <div class="id-sep">:</div>
+                <div class="id-val">{{ $inmate->no_registrasi }}</div>
+            </div>
+            <div class="id-row">
+                <div class="id-lbl">Nama Lengkap</div>
+                <div class="id-sep">:</div>
+                <div class="id-val">{{ $inmate->nama }}</div>
+            </div>
+            <div class="id-row">
+                <div class="id-lbl">Tempat, Tanggal Lahir</div>
+                <div class="id-sep">:</div>
+                <div class="id-val">
+                    {{ $inmate->tempat_lahir ?? '-' }},
+                    {{ $inmate->tanggal_lahir?->format('d F Y') ?? '-' }}
+                    ({{ $inmate->tanggal_lahir?->age ?? '-' }} tahun)
+                </div>
+            </div>
+            <div class="id-row">
+                <div class="id-lbl">Tingkat Pendidikan</div>
+                <div class="id-sep">:</div>
+                <div class="id-val">{{ $inmate->tingkat_pendidikan ?? '-' }}</div>
+            </div>
+            <div class="id-row">
+                <div class="id-lbl">Kasus / Tindak Pidana</div>
+                <div class="id-sep">:</div>
+                <div class="id-val">{{ $inmate->crimeType->nama }}</div>
+            </div>
+            <div class="id-row">
+                <div class="id-lbl">Tanggal Masuk</div>
+                <div class="id-sep">:</div>
+                <div class="id-val">{{ $inmate->tanggal_masuk?->format('d F Y') ?? '-' }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===================== II. STATISTIK ===================== -->
+<div class="box">
+    <div class="box-head">II. Ringkasan Statistik Penilaian</div>
+    <div class="box-body" style="padding:0;">
+        <div class="stat-tbl">
+            <div class="stat-row">
+                <div class="stat-cell">
+                    <div class="stat-lbl">Total Penilaian</div>
+                    <div class="stat-val">{{ $assessments->count() }}</div>
+                    <div class="stat-sub">kali penilaian</div>
+                </div>
+                <div class="stat-cell alt">
+                    <div class="stat-lbl">Rata-rata Skor Total</div>
+                    <div class="stat-val">{{ number_format(collect($progressData['total'])->avg(), 1) }}</div>
+                    <div class="stat-sub">dari 100</div>
+                </div>
+                <div class="stat-cell">
+                    <div class="stat-lbl">Tren Perkembangan</div>
+                    <div class="stat-val" style="font-size:14pt; margin-top:3px;">
+                        @if($progressData['trend'] == 'naik')     &#8679; NAIK
+                        @elseif($progressData['trend'] == 'turun') &#8681; TURUN
+                        @else                                       &#8680; STABIL
+                        @endif
+                    </div>
+                    <div class="stat-sub">{{ ucfirst($progressData['trend']) }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- ===================== IV. RIWAYAT PENILAIAN ===================== -->
+<div class="sec-title">IV. Riwayat Penilaian Detail</div>
+<table class="dt">
+    <thead>
+        <tr>
+            <th style="width:4%;">No.</th>
+            <th style="width:14%;">Tanggal</th>
+            <th style="width:11%;">Periode</th>
+            <th style="width:8%;">Skor </th>
+            <th style="width:19%;">Progress</th>
+            <th style="width:9%;">Tren</th>
+            <th style="width:18%;">Penilai</th>
+            <th style="width:17%;">Status</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach($assessments as $index => $assessment)
+        @php
+            $prev       = $index > 0 ? $assessments[$index - 1] : null;
+            $trend      = 'stable';
+            $trendVal   = 0;
+            if ($prev) {
+                $trendVal = ($assessment->skor_total ?? 0) - ($prev->skor_total ?? 0);
+                if ($trendVal > 2)      $trend = 'up';
+                elseif ($trendVal < -2) $trend = 'down';
+            }
+        @endphp
+        <tr>
+            <td style="text-align:center;">{{ $index + 1 }}</td>
+            <td>{{ $assessment->tanggal_penilaian->format('d/m/Y') }}</td>
+            <td style="text-align:center;">{{ $assessment->tanggal_penilaian->translatedFormat('M Y') ?? '-' }}</td>
+            <td style="text-align:center; font-weight:bold;">
+                {{ number_format($assessment->skor_total ?? 0, 1) }}
+            </td>
+            <td style="text-align:center;">
+                         Kepribadian: {{ number_format($assessment->skor_kepribadian ?? 0, 1) }} |
+                            Kemandirian: {{ number_format($assessment->skor_kemandirian ?? 0, 1) }} |
+                            Mental: {{ number_format($assessment->skor_mental ?? 0, 1) }} |
+                            Sikap: {{ number_format($assessment->skor_sikap ?? 0, 1) }} |
+                            Komitmen: {{ number_format($assessment->skor_komitmen ?? 0, 1) }} |
+            </td>
+            <td style="text-align:center;">
+                @if($index > 0)
+                    <span class="badge">
+                        @if($trend == 'up')       &#8679; +{{ number_format($trendVal, 1) }}
+                        @elseif($trend == 'down') &#8681; {{ number_format($trendVal, 1) }}
+                        @else                     &#8680; 0
+                        @endif
+                    </span>
+                @else
+                    <span class="badge">Awal</span>
+                @endif
+            </td>
+            <td>{{ $assessment->creator->name }}</td>
+            <td style="text-align:center;">
+                @if($assessment->status == 'diterima')
+                    <strong>&#10003; Diterima</strong>
+                @else
+                    &#9888; {{ ucfirst($assessment->status) }}
+                @endif
+            </td>
+        </tr>
+        @endforeach
+    </tbody>
+</table>
+
+<!-- ===================== PAGE BREAK ===================== -->
+<div class="page-break"></div>
+
+<!-- Header ringkas halaman 2 -->
+<div style="border-bottom:2px solid #888; padding-bottom:5px; margin-bottom:12px;
+            font-size:8.5pt; text-align:center; color:#333;">
+    <strong>LAPORAN PROGRESS PEMBINAAN NARAPIDANA</strong>
+    &nbsp;|&nbsp; {{ $inmate->nama }} ({{ $inmate->no_registrasi }})
+    &nbsp;|&nbsp; {{ $startDate->format('d/m/Y') }} &ndash; {{ $endDate->format('d/m/Y') }}
+</div>
+
+<!-- ===================== V. ANALISIS ===================== -->
+<div class="sec-title">V. Analisis dan Insight</div>
+
+@php
+    $totalScores   = collect($progressData['total']);
+    $kepScores     = collect($progressData['kepribadian']);
+    $manScores     = collect($progressData['kemandirian']);
+    $sikScores     = collect($progressData['sikap']);
+    $menScores     = collect($progressData['mental']);
+@endphp
+
+<div class="an-box">
+    <div class="an-head">A. Ringkasan Statistik Per Aspek</div>
+    <div class="an-body">
         <ul>
-            @php
-                $totalScores = collect($progressData['total']);
-                $kepribadiansScores = collect($progressData['kepribadian']);
-                $kemandirianScores = collect($progressData['kemandirian']);
-                $sikapScores = collect($progressData['sikap']);
-                $mentalScores = collect($progressData['mental']);
-            @endphp
-            <li>Skor total tertinggi: <strong>{{ number_format($totalScores->max(), 1) }}</strong></li>
-            <li>Skor total terendah: <strong>{{ number_format($totalScores->min(), 1) }}</strong></li>
-            <li>Rata-rata skor total: <strong>{{ number_format($totalScores->avg(), 1) }}</strong></li>
-            <li>Rata-rata skor kepribadian: <strong>{{ number_format($kepribadiansScores->avg(), 1) }}</strong></li>
-            <li>Rata-rata skor kemandirian: <strong>{{ number_format($kemandirianScores->avg(), 1) }}</strong></li>
-            <li>Rata-rata skor sikap: <strong>{{ number_format($sikapScores->avg(), 1) }}</strong></li>
-            <li>Rata-rata skor mental: <strong>{{ number_format($mentalScores->avg(), 1) }}</strong></li>
+            <li>Skor total tertinggi          : <strong>{{ number_format($totalScores->max(), 1) }}</strong></li>
+            <li>Skor total terendah           : <strong>{{ number_format($totalScores->min(), 1) }}</strong></li>
+            <li>Rata-rata skor total          : <strong>{{ number_format($totalScores->avg(), 1) }}</strong></li>
+            <li>Rata-rata variabel kepribadian   : <strong>{{ number_format($kepScores->avg(), 1) }}</strong></li>
+            <li>Rata-rata variabel kemandirian   : <strong>{{ number_format($manScores->avg(), 1) }}</strong></li>
+            <li>Rata-rata variabel sikap         : <strong>{{ number_format($sikScores->avg(), 1) }}</strong></li>
+            <li>Rata-rata variabel mental        : <strong>{{ number_format($menScores->avg(), 1) }}</strong></li>
         </ul>
     </div>
+</div>
 
-    <div class="insight-box">
-        <h4>📈 Tren Perkembangan</h4>
+<div class="an-box">
+    <div class="an-head">B. Analisis Tren Perkembangan</div>
+    <div class="an-body">
         <ul>
             @if($progressData['trend'] == 'naik')
-                <li style="color: #065f46;">✓ Menunjukkan tren perkembangan positif dengan kenaikan skor total dari
+                <li>Narapidana menunjukkan tren perkembangan <strong>positif</strong> dengan kenaikan skor dari
                     <strong>{{ number_format($totalScores->first(), 1) }}</strong> menjadi
-                    <strong>{{ number_format($totalScores->last(), 1) }}</strong></li>
+                    <strong>{{ number_format($totalScores->last(), 1) }}</strong> poin.</li>
             @elseif($progressData['trend'] == 'turun')
-                <li style="color: #991b1b;">⚠ Menunjukkan tren penurunan skor total dari
+                <li>Narapidana menunjukkan tren <strong>penurunan</strong> skor total dari
                     <strong>{{ number_format($totalScores->first(), 1) }}</strong> menjadi
-                    <strong>{{ number_format($totalScores->last(), 1) }}</strong></li>
+                    <strong>{{ number_format($totalScores->last(), 1) }}</strong> poin.</li>
             @else
-                <li style="color: #92400e;">→ Skor relatif stabil tanpa perubahan signifikan</li>
+                <li>Skor narapidana relatif <strong>stabil</strong> tanpa perubahan signifikan selama periode evaluasi.</li>
             @endif
-{{--
-            <li>Perubahan total: <strong>{{ number_format($totalScores->last() - $totalScores->first(), 1) }}</strong> poin</li>
-
-            @php
-                $improvement = (($totalScores->last() - $totalScores->first()) / $totalScores->first()) * 100;
-            @endphp
-            @if($improvement > 10)
-                <li style="color: #065f46;">✓ Peningkatan performa sebesar
-                    <strong>{{ number_format($improvement, 1) }}%</strong> dari penilaian awal</li>
-            @elseif($improvement < -10)
-                <li style="color: #991b1b;">⚠ Penurunan performa sebesar
-                    <strong>{{ number_format(abs($improvement), 1) }}%</strong> dari penilaian awal</li>
-            @endif --}}
+            <li>Perubahan skor total                   : <strong>{{ number_format($totalScores->last() - $totalScores->first(), 1) }}</strong> poin.</li>
+            <li>Jumlah penilaian yang telah dilakukan  : <strong>{{ $assessments->count() }}</strong> kali.</li>
         </ul>
     </div>
+</div>
 
-    <!-- Rekomendasi -->
-    <div class="recommendation-box">
-        <h4>💡 Rekomendasi Tindak Lanjut</h4>
-        <ul style="margin-left: 20px; line-height: 1.8;">
-            @php
-                $avgTotal = collect($progressData['total'])->avg();
-            @endphp
+<!-- ===================== VI. REKOMENDASI ===================== -->
+<div class="sec-title">VI. Rekomendasi Tindak Lanjut</div>
+<div class="rek-box">
+    <div class="rek-head">Rekomendasi Pembinaan</div>
+    <div class="rek-body">
+        @php $avgTotal = collect($progressData['total'])->avg(); @endphp
+        <ul>
             @if($avgTotal >= 70)
-                <li>Narapidana menunjukkan perkembangan yang baik. Pertahankan program pembinaan yang sudah berjalan.</li>
-                <li>Dapat dipertimbangkan untuk program asimilasi atau pembebasan bersyarat.</li>
+                <li>Narapidana menunjukkan perkembangan yang <strong>baik</strong>. Pertahankan program pembinaan yang sedang berjalan.</li>
+                <li>Dapat dipertimbangkan untuk mengikuti program asimilasi atau pembebasan bersyarat sesuai ketentuan yang berlaku.</li>
             @elseif($avgTotal >= 40)
-                <li>Perlu peningkatan pada beberapa aspek pembinaan.</li>
-                <li>Identifikasi area yang perlu perbaikan dan berikan program pendampingan tambahan.</li>
+                <li>Perlu peningkatan pada beberapa aspek pembinaan yang masih di bawah standar.</li>
+                <li>Identifikasi area yang memerlukan perbaikan dan berikan program pendampingan tambahan.</li>
             @else
-                <li>Perlu perhatian khusus dan evaluasi mendalam terhadap program pembinaan.</li>
-                <li>Disarankan melakukan konseling intensif dan penyesuaian metode pembinaan.</li>
+                <li>Narapidana memerlukan <strong>perhatian khusus</strong> dan evaluasi mendalam terhadap program pembinaan.</li>
+                <li>Disarankan melakukan konseling intensif serta penyesuaian metode dan pendekatan pembinaan.</li>
             @endif
-
             @if($progressData['trend'] == 'naik')
-                <li>Tren positif menunjukkan efektivitas program. Lanjutkan dengan pendekatan yang sama.</li>
+                <li>Tren positif mengindikasikan efektivitas program. Lanjutkan dengan pendekatan yang sama.</li>
             @elseif($progressData['trend'] == 'turun')
-                <li>Tren negatif memerlukan evaluasi ulang strategi pembinaan yang diterapkan.</li>
+                <li>Tren negatif memerlukan evaluasi ulang terhadap strategi pembinaan yang diterapkan saat ini.</li>
             @endif
-
-            <li>Lakukan penilaian berkala untuk memantau perkembangan berkelanjutan.</li>
-            <li>Dokumentasikan best practices untuk diterapkan pada narapidana lain.</li>
+            <li>Lakukan penilaian berkala secara konsisten untuk memantau perkembangan berkelanjutan.</li>
+            <li>Dokumentasikan praktik terbaik (best practices) untuk dapat diterapkan kepada narapidana lainnya.</li>
         </ul>
     </div>
+</div>
 
-    <!-- Catatan Penutup -->
-    <div style="margin-top: 30px; padding: 15px; background-color: #f9fafb; border-radius: 6px;">
-        <p style="font-size: 9pt; color: #6b7280; line-height: 1.6;">
-            <strong>Catatan:</strong> Laporan ini dibuat berdasarkan data penilaian yang telah disetujui
-            pada periode {{ $startDate->format('d F Y') }} hingga {{ $endDate->format('d F Y') }}.
-            Data yang ditampilkan merupakan hasil agregasi dari {{ $assessments->count() }} kali penilaian.
-            Untuk informasi lebih detail, dapat merujuk pada laporan penilaian individual.
-        </p>
-    </div>
+<!-- ===================== CATATAN ===================== -->
+<div class="catatan">
+    <strong>Catatan:</strong> Laporan ini disusun berdasarkan data penilaian yang telah disetujui pada periode
+    {{ $startDate->format('d F Y') }} hingga {{ $endDate->format('d F Y') }}.
+    Data merupakan hasil agregasi dari <strong>{{ $assessments->count() }}</strong> kali penilaian.
+    Untuk informasi lebih rinci dapat merujuk pada laporan penilaian individual masing-masing periode.
+</div>
 
-    <!-- Footer -->
-    <div class="footer">
-        Dicetak pada: {{ now()->format('d F Y H:i') }} | Laporan Progress Narapidana
+<!-- ===================== TANDA TANGAN ===================== -->
+<div class="ttd-tbl">
+    <div class="ttd-row">
+        <div class="ttd-cell">
+            <div class="ttd-pos">Mengetahui,<br>Kepala Lembaga Pemasyarakatan</div>
+            <div class="ttd-nama">( &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; )</div>
+            <div class="ttd-nip">NIP. &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
+        </div>
+        <div class="ttd-cell">
+            <div class="ttd-pos">[Kota], {{ now()->format('d F Y') }}<br>Petugas Pembinaan</div>
+            <div class="ttd-nama">( &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; )</div>
+            <div class="ttd-nip">NIP. &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
+        </div>
     </div>
+</div>
+
+<!-- ===================== FOOTER ===================== -->
+<div class="footer">
+    <div class="f-l">Laporan Progress Narapidana &mdash; Dokumen Resmi</div>
+    <div class="f-c">{{ $inmate->nama }} ({{ $inmate->no_registrasi }})</div>
+    <div class="f-r">Dicetak: {{ now()->format('d/m/Y H:i') }}</div>
+</div>
+
 </body>
 </html>

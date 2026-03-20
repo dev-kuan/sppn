@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Imports\AssessmentImport;
 use App\Models\Assessment;
 use App\Models\AssessmentScore;
+use App\Models\CommitmentRecommendation;
 use App\Models\CommitmentStatement;
 use App\Models\DailyObservation;
 use App\Models\ObservationItem;
@@ -76,6 +77,24 @@ class AssessmentService
             $this->logAssessmentActivity($assessment, 'aspect-review-updated');
 
             return $assessmentScore;
+        });
+    }
+    public function updateRecommendation(Assessment $assessment, string $deskripsi, int $layak_dapat_hak)
+    {
+        return DB::transaction(function () use ($assessment, $deskripsi, $layak_dapat_hak) {
+            $assessmentRecommendation = CommitmentRecommendation::where('assessment_id', $assessment->id)
+                ->firstOrFail();
+
+            $assessmentRecommendation->update(
+                [
+                    'deskripsi' => $deskripsi,
+                    'layak_dapat_hak' => $layak_dapat_hak,
+                    ]
+                );
+
+            $this->logAssessmentActivity($assessment, 'recomendation-updated');
+
+            return $assessmentRecommendation;
         });
     }
 
@@ -229,6 +248,7 @@ class AssessmentService
             'approved' => 'Penilaian disetujui untuk: ' . $assessment->inmate->nama,
             'imported' => 'Import data penilaian untuk: ' . $assessment->inmate->nama,
             'aspect-review-updated' => 'Review aspek diperbarui untuk: ' . $assessment->inmate->nama,
+            'recomendation-updated' => 'Komitmen Rekomendasi diperbarui untuk: ' . $assessment->inmate->nama,
         ];
 
         activity()

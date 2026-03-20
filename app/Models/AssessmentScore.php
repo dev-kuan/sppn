@@ -68,6 +68,6 @@ class AssessmentScore extends Model
 
     public function scopeWithRelations($query)
     {
-        return $query->with(['variabel', 'aspect']);
+        return $query->with(['aspect']);
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateInmateRequest extends FormRequest
 {
@@ -22,7 +23,12 @@ class UpdateInmateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'no_registrasi' => 'required|string|max:255|unique:inmates,no_registrasi,' . $inmate->id,
+'no_registrasi' => [
+            'required',
+            'string',
+            'max:255',
+            Rule::unique('inmates', 'no_registrasi')->ignore($this->route('inmate')),
+        ],
             'nama' => 'required|string|max:255',
             'tempat_lahir' => 'required|string|max:255',
             'tanggal_lahir' => 'required|date|before:today',

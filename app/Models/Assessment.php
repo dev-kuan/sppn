@@ -85,7 +85,7 @@ class Assessment extends Model
 
     public function commitmentRecommendations()
     {
-        return $this->hasMany(CommitmentRecommendation::class);
+        return $this->hasOne(CommitmentRecommendation::class);
     }
 
     public function commitmentSignatures()
@@ -156,8 +156,6 @@ class Assessment extends Model
         return $query->where('inmate_id', $inmateId);
     }
 
-    // Methods
-    // Methods
 public function calculateScores()
     {
         try {
@@ -288,7 +286,36 @@ public function calculateScores()
             throw $e;
         }
     }
-
+public function getKategoriKepribadianAttribute()
+{
+    return $this->skor_kepribadian
+        ? $this->getKategoriFromScore($this->skor_kepribadian, 'kepribadian')
+        : '-';
+}
+public function getKategoriKemandirianAttribute()
+{
+    return $this->skor_kemandirian
+        ? $this->getKategoriFromScore($this->skor_kemandirian, 'kemandirian')
+        : '-';
+}
+public function getKategoriSikapAttribute()
+{
+    return $this->skor_sikap
+        ? $this->getKategoriFromScore($this->skor_sikap, 'sikap')
+        : '-';
+}
+public function getKategoriMentalAttribute()
+{
+    return $this->skor_mental
+        ? $this->getKategoriFromScore($this->skor_mental, 'mental')
+        : '-';
+}
+public function getKategoriKomitmenAttribute()
+{
+    return $this->skor_komitmen
+        ? $this->getKategoriFromScore($this->skor_komitmen, 'komitmen')
+        : '-';
+}
 private function mapVariabelName(string $variabelNama): string
 {
     return match (true) {
@@ -302,6 +329,10 @@ private function mapVariabelName(string $variabelNama): string
 }
 private function getKategoriFromScore(float $skor, string $variabelKey): string
     {
+        if (is_null($skor)) {
+        return '-';
+    }
+
         if ($variabelKey === 'kepribadian' || $variabelKey === 'kemandirian') {
             if ($skor > 83.35) return 'Sangat Baik';
             if ($skor > 66.67) return 'Baik';
@@ -324,11 +355,7 @@ private function getKategoriFromScore(float $skor, string $variabelKey): string
             return 'Sangat Tidak Sehat Mental';
         }
 
-        if ($skor > 83.35) return 'Sangat Baik';
-        if ($skor > 66.67) return 'Baik';
-        if ($skor > 33.33) return 'Cukup Baik';
-        if ($skor > 16.66) return 'Tidak Baik';
-        return 'Sangat Tidak Baik';
+            return '-';
     }
 
     /**

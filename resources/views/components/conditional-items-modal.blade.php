@@ -43,7 +43,7 @@
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',s
                     'Accept': 'application/json'
                 },
                 body: JSON.stringify({
@@ -96,6 +96,8 @@
     }
 }"
 x-show="show"
+@open-conditional-modal.window="openModal()"
+x-transition
 x-cloak
 @keydown.escape.window="closeModal()"
 class="fixed inset-0 z-50 overflow-y-auto"

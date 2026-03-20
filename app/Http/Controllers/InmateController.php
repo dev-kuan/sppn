@@ -4,9 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreInmateRequest;
 use App\Http\Requests\UpdateInmateRequest;
-use App\Models\Inmate;
 use App\Models\CrimeType;
+use App\Models\Inmate;
 use App\Services\InmateService;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -56,8 +57,9 @@ class InmateController extends Controller
         // $this->authorize('create-narapidana');
 
         $crimeTypes = CrimeType::all();
+        $noRegistrasi = $this->inmateService->getNextNoRegistrasi();
 
-        return view('inmates.create', compact('crimeTypes'));
+        return view('inmates.create', compact('crimeTypes', 'noRegistrasi'));
     }
 
     public function store(StoreInmateRequest $request,)
@@ -109,7 +111,6 @@ class InmateController extends Controller
         // $this->authorize('edit-narapidana');
         try {
             $inmate = $this->inmateService->updateInmate($inmate, $request->validated());
-
             return redirect()
             ->route('inmates.show', $inmate)
             ->with('success', 'Data narapidana berhasil diperbarui.');
@@ -163,4 +164,25 @@ class InmateController extends Controller
 
         return view('inmates.trashed', compact('inmates'));
     }
+
+    private function generateNoRegistrasi()
+    {
+        $monthYear = Carbon::now()->format('my'); // Contoh: 0326 untuk Maret 2026
+
+        // Ambil nomor registrasi terakhir bulan ini
+        $lastInmate = Inmate::whereYear('created_at', Carbon::now()->year)
+                           ->whereMonth('created_at', Carbon::now()->month)
+                           ->orderBy('no_registrasi', 'desc')
+                           ->first();
+
+        if ($lastInmate && preg_match('/REG-(\d{3})-' . $monthYear . '/', $lastInmate->no_registrasi, $matches)) {
+            $lastNumber = intval($matches[1]);
+            $newNumber = $lastNumber + 1;
+        } else {
+            $newNumber = 1;
+        }
+
+        return 'REG-' . str_pad($newNumber, 3, '0', STR_PAD_LEFT) . '-' . $monthYear;
+    }
+
 }

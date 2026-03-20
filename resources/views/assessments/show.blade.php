@@ -83,37 +83,71 @@
         <!-- Score Summary -->
         <div class="px-6 py-6 bg-gray-50">
             <div class="grid grid-cols-2 gap-4 sm:grid-cols-5">
-                <div class="p-4 text-center rounded-lg bg-indigo-50">
-                    <p class="text-xs font-medium text-indigo-600">Kepribadian</p>
-                    <p class="text-2xl font-bold text-indigo-900">{{ number_format($assessment->skor_kepribadian, 2) }}</p>
-                </div>
-                <div class="p-4 text-center rounded-lg bg-green-50">
-                    <p class="text-xs font-medium text-green-600">Kemandirian</p>
-                    <p class="text-2xl font-bold text-green-900">{{ number_format($assessment->skor_kemandirian, 2) }}</p>
-                </div>
-                <div class="p-4 text-center rounded-lg bg-blue-50">
-                    <p class="text-xs font-medium text-blue-600">Sikap</p>
-                    <p class="text-2xl font-bold text-blue-900">{{ number_format($assessment->skor_sikap, 2) }}</p>
-                </div>
-                <div class="p-4 text-center rounded-lg bg-purple-50">
-                    <p class="text-xs font-medium text-purple-600">Mental</p>
-                    <p class="text-2xl font-bold text-purple-900">{{ number_format($assessment->skor_mental, 2) }}</p>
-                </div>
-                <div class="p-4 text-center bg-gray-100 rounded-lg">
-                    <p class="text-xs font-medium text-gray-600">Total</p>
-                    <p class="text-2xl font-bold text-gray-900">{{ number_format($assessment->skor_total, 2) }}</p>
-                </div>
-            </div>
-
-            <div class="mt-4 text-center">
-                <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium
-                    @if($assessment->skor_total >= 81) bg-green-100 text-green-800
-                    @elseif($assessment->skor_total >= 61) bg-blue-100 text-blue-800
-                    @elseif($assessment->skor_total >= 41) bg-yellow-100 text-yellow-800
+                <div class="p-4 text-center rounded-lg
+                    @if($assessment->skor_kemandirian >= 81) bg-green-100 text-green-800
+                    @elseif($assessment->skor_kemandirian >= 61) bg-blue-100 text-blue-800
+                    @elseif($assessment->skor_kemandirian >= 41) bg-yellow-100 text-yellow-800
                     @else bg-red-100 text-red-800
                     @endif">
-                    Kategori: {{ $assessment->kategori_total }}
+                    <p class="text-xs font-medium text-indigo-600">Kepribadian</p>
+                    <p class="text-2xl font-bold text-indigo-900">{{ number_format($assessment->skor_kepribadian, 2) }}</p>
+                <span class="inline-flex items-center px-4 py-2 text-sm font-medium rounded-full">
+                    {{ $assessment->kategori_kepribadian }}
                 </span>
+                </div>
+                <div class="p-4 text-center rounded-lg
+                    @if($assessment->skor_kemandirian >= 81) bg-green-100 text-green-800
+                    @elseif($assessment->skor_kemandirian >= 61) bg-blue-100 text-blue-800
+                    @elseif($assessment->skor_kemandirian >= 41) bg-yellow-100 text-yellow-800
+                    @else bg-red-100 text-red-800
+                    @endif">
+                    <p class="text-xs font-medium text-green-600">Kemandirian</p>
+                    <p class="text-2xl font-bold text-green-900">{{ number_format($assessment->skor_kemandirian, 2) }}</p>
+                <span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium
+                 @if($assessment->skor_kemandirian >= 81) bg-green-100 text-green-800
+                    @elseif($assessment->skor_kemandirian >= 61) bg-blue-100 text-blue-800
+                    @elseif($assessment->skor_kemandirian >= 41) bg-yellow-100 text-yellow-800
+                    @else bg-red-100 text-red-800
+                    @endif">
+                    {{ $assessment->kategori_kemandirian }}
+                </span>
+                </div>
+                <div class="p-4 text-center rounded-lg
+                    @if($assessment->skor_kemandirian >= 81) bg-green-100 text-green-800
+                    @elseif($assessment->skor_kemandirian >= 61) bg-blue-100 text-blue-800
+                    @elseif($assessment->skor_kemandirian >= 41) bg-yellow-100 text-yellow-800
+                    @else bg-red-100 text-red-800
+                    @endif">
+                    <p class="text-xs font-medium text-blue-600">Sikap</p>
+                    <p class="text-2xl font-bold text-blue-900">{{ number_format($assessment->skor_sikap, 2) }}</p>
+                <span class="inline-flex items-center px-4 py-2 text-sm font-medium rounded-full">
+                    {{ $assessment->kategori_sikap }}
+                </span>
+                </div>
+                <div class="p-4 text-center rounded-lg
+                    @if($assessment->skor_kemandirian >= 81) bg-green-100 text-green-800
+                    @elseif($assessment->skor_kemandirian >= 61) bg-blue-100 text-blue-800
+                    @elseif($assessment->skor_kemandirian >= 41) bg-yellow-100 text-yellow-800
+                    @else bg-red-100 text-red-800
+                    @endif">
+                    <p class="text-xs font-medium text-purple-600">Mental</p>
+                    <p class="text-2xl font-bold text-purple-900">{{ number_format($assessment->skor_mental, 2) }}</p>
+                <span class="inline-flex items-center px-4 py-2 text-sm font-medium rounded-full">
+                    {{ $assessment->kategori_mental }}
+                </span>
+                </div>
+                <div class="p-4 text-center rounded-lg
+                 @if($assessment->skor_komitmen >= 81) bg-green-100 text-green-800
+                    @elseif($assessment->skor_komitmen >= 61) bg-blue-100 text-blue-800
+                    @elseif($assessment->skor_komitmen >= 41) bg-yellow-100 text-yellow-800
+                    @else bg-red-100 text-red-800
+                    @endif">
+                    <p class="text-xs font-medium text-gray-600">Komitmen</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ number_format($assessment->skor_komitmen, 2) }}</p>
+                <span class="inline-flex items-center px-4 py-2 text-sm font-medium rounded-full">
+                    {{ $assessment->kategori_komitmen }}
+                </span>
+                </div>
             </div>
         </div>
 
@@ -153,14 +187,30 @@
         </div>
 
         @foreach($variabel->aspect as $aspek)
+        @php
+        $aspectScore = $assessment->assessmentScores()->where('aspect_id', $aspek->id)->first();
+        @endphp
         <div class="border-b border-gray-200 last:border-b-0">
             <div x-data="{ open: false }" class="border-b border-gray-100">
                 <button @click="open = !open"
-                        class="flex items-center justify-between w-full px-6 py-3 transition-colors bg-gray-50 hover:bg-gray-100">
-                    <span class="font-medium text-gray-700">{{ $aspek->nama }}</span>
-                    <svg class="w-5 h-5 text-gray-500 transition-transform" :class="{ 'rotate-180': open }" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-                    </svg>
+                        class="w-full px-6 py-3 text-left transition-colors bg-gray-50 hover:bg-gray-100">
+                        <div class="flex items-center justify-between">
+                            <span class="font-medium text-gray-700">{{ $aspek->nama }}</span>
+                            <div class="flex items-center justify-between gap-4">
+                                <span class="px-3 py-1 mt-1 text-xs font-medium rounded-full inline-flex
+                                                    @if(($aspectScore->skor ?? 0) >= 81) bg-green-100 text-green-800
+                                                    @elseif(($aspectScore->skor ?? 0) >= 61) bg-blue-100 text-blue-800
+                                                    @elseif(($aspectScore->skor ?? 0) >= 41) bg-yellow-100 text-yellow-800
+                                                    @else bg-red-100 text-red-800
+                                                    @endif">
+                                                    {{ $aspectScore->kategori ?? 'Belum Dinilai' }}
+                                                </span>
+                                <svg class="w-5 h-5 text-gray-500 transition-transform" :class="{ 'rotate-180': open }" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                </svg>
+                            </div>
+                        </div>
+                        <span class="mt-3 text-sm font-normal text-left text-gray-700">Catatan: {{ $aspectScore->catatan ?? '' }}</span>
                 </button>
 
                 <div x-show="open" x-collapse class="px-6 py-4">
@@ -191,43 +241,6 @@
         @endforeach
     </div>
     @endforeach
-
-    <!-- Commitment Statements -->
-    <div class="bg-white rounded-lg shadow">
-        <div class="px-6 py-4 border-b border-gray-200">
-            <h3 class="text-lg font-medium text-gray-900">Pernyataan Komitmen</h3>
-        </div>
-        <div class="px-6 py-4">
-            <div class="space-y-4">
-                @foreach($assessment->commitmentStatements as $statement)
-                <div class="flex items-center justify-between p-4 rounded-lg bg-gray-50">
-                    <div>
-                        <p class="font-medium text-gray-900">
-                            Komitmen {{ $statement->jenis === 'nkri' ? 'Setia NKRI' : 'Anti Narkoba' }}
-                        </p>
-                        @if($statement->is_signed)
-                        <p class="text-sm text-gray-500">Ditandatangani: {{ $statement->signed_at->format('d/m/Y H:i') }}</p>
-                        @endif
-                    </div>
-                    <div>
-                        @if($statement->is_signed)
-                        <span class="inline-flex items-center px-3 py-1 text-xs font-medium text-green-800 bg-green-100 rounded-full">
-                            <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 10-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clip-rule="evenodd" />
-                            </svg>
-                            Ditandatangani
-                        </span>
-                        @else
-                        <span class="inline-flex items-center px-3 py-1 text-xs font-medium text-gray-800 bg-gray-100 rounded-full">
-                            Belum Ditandatangani
-                        </span>
-                        @endif
-                    </div>
-                </div>
-                @endforeach
-            </div>
-        </div>
-    </div>
 </div>
 
 <!-- Reject Modal -->

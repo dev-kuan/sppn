@@ -22,12 +22,6 @@ body {
 }
 
 
-body {
-    font-family: "DejaVu Sans", Arial, sans-serif;
-    font-size: 9pt;
-    color: #000;
-}
-
 /* ================= HEADER ================= */
 .header {
     text-align: center;
@@ -191,7 +185,7 @@ tr:nth-child(even) {
         <div class="summary-value">{{ $statistics['diterima'] ?? 0 }}</div>
     </div>
     <div class="summary-card">
-        <div class="summary-label">Pending</div>
+        <div class="summary-label">Menunggu</div>
         <div class="summary-value">{{ $statistics['pending'] ?? 0 }}</div>
     </div>
     <div class="summary-card">

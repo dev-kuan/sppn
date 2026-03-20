@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\AssessmentAspect;
 use App\Models\AssessmentVariabel;
 use App\Models\ObservationItem;
+use App\Services\ConditionalItemService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
@@ -17,9 +18,11 @@ class SettingController extends Controller
 {
 
     private $configPath;
+    protected $conditionalItemService;
 
-    public function __construct()
+    public function __construct(ConditionalItemService $conditionalItemService)
     {
+        $this->conditionalItemService = $conditionalItemService;
         $this->configPath = config_path('institution.php');
     }
     /**
@@ -206,11 +209,12 @@ class SettingController extends Controller
         }
 
         $items = $query->ordered()->paginate(20)->withQueryString();
+        $conditionalItems = $this->conditionalItemService->getConditionalItems();
 
         $variabels = AssessmentVariabel::all();
         $aspects = AssessmentAspect::all();
 
-        return view('settings.observation-items.index', compact('items', 'variabels', 'aspects'));
+        return view('settings.observation-items.index', compact('items', 'variabels', 'aspects', 'conditionalItems'));
     }
 
     public function storeObservationItem(Request $request)

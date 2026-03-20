@@ -27,8 +27,8 @@
                                name="no_registrasi"
                                id="no_registrasi"
                                value="{{ old('no_registrasi', $inmate->no_registrasi) }}"
-                               required
-                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm @error('no_registrasi') border-red-500 @enderror">
+                               readonly
+                               class="mt-1 cursor-not-allowed bg-gray-200 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm @error('no_registrasi') border-red-500 @enderror">
                         @error('no_registrasi')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                         @enderror

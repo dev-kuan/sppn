@@ -100,6 +100,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
             'assessments/{assessment}/aspect-note',
             [AssessmentController::class, 'updateAspectNote']
         )->name('assessments.update-aspect-note');
+        Route::post(
+            'assessments/{assessment}/update-recommendation',
+            [AssessmentController::class, 'updateRecommendation']
+        )->name('assessments.update-recomendation');
         Route::get('/{assessment}/export-template', [AssessmentController::class, 'exportTemplate'])->name('assessments.export-template');
         Route::post('/{assessment}/import', [AssessmentController::class, 'import'])->name('assessments.import');
     });

@@ -155,11 +155,11 @@ class DashboardController extends Controller
 
         // My assessments
         $data['myAssessments'] = [
-            'total' => Assessment::where('created_by', $userId)->count(),
+            'total' => Assessment::count(),
             'draft' => Assessment::where('created_by', $userId)->draf()->count(),
-            'submitted' => Assessment::where('created_by', $userId)->disubmit()->count(),
-            'approved' => Assessment::where('created_by', $userId)->diterima()->count(),
-            'rejected' => Assessment::where('created_by', $userId)->ditolak()->count(),
+            'submitted' => Assessment::disubmit()->count(),
+            'approved' => Assessment::diterima()->count(),
+            'rejected' => Assessment::ditolak()->count(),
         ];
 
         // Assessments to complete (draft)
@@ -185,8 +185,7 @@ class DashboardController extends Controller
             ->first();
 
         // Recent activity
-        $data['myRecentAssessments'] = Assessment::where('created_by', $userId)
-            ->with('inmate')
+        $data['myRecentAssessments'] = Assessment::with('inmate')
             ->latest('updated_at')
             ->limit(10)
             ->get();
